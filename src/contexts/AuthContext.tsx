@@ -22,7 +22,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isEmailVerified, setIsEmailVerified] = useState(false)
 
   useEffect(() => {
-    // Get initial session
+    // Get initial session - check both localStorage and sessionStorage
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
       setUser(session?.user ?? null)
@@ -95,12 +95,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const signIn = async (email: string, password: string, rememberMe: boolean = true) => {
-    const { error } = await supabase.auth.signInWithPassword({
+    // Sign in with Supabase
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     })
 
     if (error) throw error
+
+    // Handle "Remember me" functionality
+    // rememberMe = true: session persists across browser restarts (localStorage)
+    // rememberMe = false: session cleared when browser closes (sessionStorage)
+    if (data.session && !rememberMe) {
+      // Move session from localStorage to sessionStorage for session-only persistence
+      const authKey = Object.keys(localStorage).find(key =>
+        key.includes('auth-token') && key.includes('sb-')
+      )
+
+      if (authKey) {
+        const sessionData = localStorage.getItem(authKey)
+        if (sessionData) {
+          // Copy to sessionStorage
+          sessionStorage.setItem(authKey, sessionData)
+          // Remove from localStorage
+          localStorage.removeItem(authKey)
+        }
+      }
+    }
+    // If rememberMe = true, session stays in localStorage (Supabase default)
   }
 
   const signOut = async () => {

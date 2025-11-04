@@ -9,7 +9,13 @@
       "Bash(cat:*)",
       "SlashCommand(/bmad:bmm:workflows:dev-story)",
       "SlashCommand(/bmad:bmm:workflows:code-review)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(git pull:*)",
+      "Bash(md5sum:*)",
+      "Bash(npm run dev:*)",
+      "Bash(git add:*)",
+      "Bash(git restore:*)",
+      "Bash(npm test)"
     ],
     "deny": [],
     "ask": []

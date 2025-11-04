@@ -39,7 +39,7 @@ development_status:
   epic-1: backlog
   1-1-user-registration-with-email-password: done
   1-2-email-verification-flow: done
-  1-3-user-login-with-email-password: review
+  1-3-user-login-with-email-password: done
   1-4-google-oauth-integration: backlog
   1-5-password-reset-flow: backlog
   1-6-protected-routes-session-management: backlog
