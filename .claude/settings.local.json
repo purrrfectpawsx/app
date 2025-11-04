@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "SlashCommand(/bmad:bmm:workflows:story-context)",
+      "Bash(test:*)",
+      "Bash(npm create:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run build:*)",
+      "Bash(cat:*)",
+      "SlashCommand(/bmad:bmm:workflows:dev-story)",
+      "SlashCommand(/bmad:bmm:workflows:code-review)",
+      "Bash(git checkout:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

@@ -1,0 +1,119 @@
+# generated: 2025-11-03
+# project: app
+# project_key: app
+# tracking_system: file-system
+# story_location: {project-root}/docs/stories
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic exists in epic file but not contexted
+#   - contexted: Epic tech context created (required before drafting stories)
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - drafted: Story file created in stories folder
+#   - ready-for-dev: Draft approved and story context created
+#   - in-progress: Developer actively working on implementation
+#   - review: Under SM review (via code-review workflow)
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - completed: Retrospective has been done
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epics should be 'contexted' before stories can be 'drafted'
+# - Stories can be worked in parallel if team capacity allows
+# - SM typically drafts next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', SM reviews, then Dev moves to 'done'
+
+generated: 2025-11-03
+project: app
+project_key: app
+tracking_system: file-system
+story_location: "{project-root}/docs/stories"
+
+development_status:
+  epic-1: backlog
+  1-1-user-registration-with-email-password: done
+  1-2-email-verification-flow: done
+  1-3-user-login-with-email-password: review
+  1-4-google-oauth-integration: backlog
+  1-5-password-reset-flow: backlog
+  1-6-protected-routes-session-management: backlog
+  epic-1-retrospective: optional
+
+  epic-2: backlog
+  2-1-create-pet-profile-with-basic-info: backlog
+  2-2-view-all-pets-grid: backlog
+  2-3-pet-detail-page-with-full-info: backlog
+  2-4-edit-pet-profile: backlog
+  2-5-delete-pet-with-confirmation: backlog
+  2-6-free-tier-enforcement-1-pet-limit: backlog
+  epic-2-retrospective: optional
+
+  epic-3: backlog
+  3-1-create-health-record-database-schema: backlog
+  3-2-create-vaccine-record: backlog
+  3-3-create-medication-vet-visit-symptom-and-weight-check-records: backlog
+  3-4-view-health-timeline-with-color-coding: backlog
+  3-5-filter-timeline-by-record-type: backlog
+  3-6-weight-tracking-visualization-chart: backlog
+  3-7-edit-health-record: backlog
+  3-8-delete-health-record-with-confirmation: backlog
+  3-9-attach-documents-to-health-records: backlog
+  3-10-free-tier-enforcement-50-health-records-limit: backlog
+  epic-3-retrospective: optional
+
+  epic-4: backlog
+  4-1-create-expense-database-schema: backlog
+  4-2-create-expense-with-category-selection: backlog
+  4-3-view-expense-dashboard-with-summary-cards: backlog
+  4-4-set-monthly-budget-with-progress-bar: backlog
+  4-5-budget-alert-notifications: backlog
+  4-6-filter-and-sort-expenses: backlog
+  4-7-export-expenses-to-csv: backlog
+  4-8-edit-expense: backlog
+  4-9-delete-expense-with-confirmation: backlog
+  4-10-attach-receipt-photo-to-expense: backlog
+  4-11-free-tier-enforcement-100-expenses-per-month: backlog
+  epic-4-retrospective: optional
+
+  epic-5: backlog
+  5-1-create-reminders-database-schema: backlog
+  5-2-create-one-time-and-recurring-reminders: backlog
+  5-3-view-reminders-list-with-grouping: backlog
+  5-4-mark-reminder-complete-and-snooze-options: backlog
+  5-5-configure-onesignal-push-notifications: backlog
+  5-6-send-push-notifications-at-reminder-time: backlog
+  5-7-configure-resend-email-notifications: backlog
+  5-8-send-email-notifications-at-reminder-time: backlog
+  5-9-edit-and-delete-reminders: backlog
+  5-10-free-tier-enforcement-10-reminders-limit: backlog
+  epic-5-retrospective: optional
+
+  epic-6: backlog
+  6-1-create-documents-database-schema: backlog
+  6-2-upload-documents-with-categorization: backlog
+  6-3-view-document-library-with-grid-layout: backlog
+  6-4-preview-and-download-documents: backlog
+  6-5-delete-documents-with-storage-quota-update: backlog
+  6-6-export-pet-profile-to-pdf: backlog
+  6-7-email-pet-profile-to-veterinarian: backlog
+  6-8-free-tier-enforcement-100mb-storage-limit: backlog
+  epic-6-retrospective: optional
+
+  epic-7: backlog
+  7-1-create-stripe-integration-setup: backlog
+  7-2-create-pricing-page: backlog
+  7-3-stripe-checkout-flow-monthly-and-annual: backlog
+  7-4-process-stripe-webhook-for-subscription-updates: backlog
+  7-5-view-subscription-status-and-manage-billing: backlog
+  7-6-downgrade-flow-premium-to-free: backlog
+  7-7-handle-failed-payments-and-dunning: backlog
+  7-8-annual-subscription-discount-logic: backlog
+  7-9-free-tier-limits-summary-dashboard: backlog
+  7-10-gdpr-compliance-account-deletion-and-data-export: backlog
+  epic-7-retrospective: optional

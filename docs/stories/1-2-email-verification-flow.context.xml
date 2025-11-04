@@ -1,0 +1,262 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>2</storyId>
+    <title>Email Verification Flow</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-04</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/stories/1-2-email-verification-flow.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a new user</asA>
+    <iWant>to verify my email address</iWant>
+    <soThat>I can activate my account and prove I own the email</soThat>
+    <tasks>
+- Task 1: Configure Supabase email verification settings (AC: #2, #3)
+  - Enable email verification in Supabase Auth dashboard
+  - Customize email template with PetLog branding in Supabase settings
+  - Set verification redirect URL to app domain
+  - Test verification email delivery timing (&lt;60s)
+
+- Task 2: Create VerificationPending component (AC: #1, #7)
+  - Create src/components/auth/VerificationPending.tsx
+  - Display "Check your email" message with user's email address
+  - Add resend email button with loading state
+  - Implement resend logic using auth.resend() API
+  - Add rate limiting for resend (prevent spam)
+  - Display success message when resend succeeds
+  - Style with shadcn/ui Card component
+
+- Task 3: Create EmailVerified component (AC: #5)
+  - Create src/components/auth/EmailVerified.tsx
+  - Display success message "Email verified successfully"
+  - Add automatic redirect to dashboard after 2 seconds
+  - Include manual "Continue to Dashboard" button
+  - Style with success state (green checkmark icon)
+
+- Task 4: Implement verification status checks in AuthContext (AC: #6)
+  - Update src/contexts/AuthContext.tsx
+  - Check user.email_confirmed_at on auth state change
+  - Store verification status in auth state
+  - Expose isEmailVerified boolean in context
+  - Update auth state when verification completes
+
+- Task 5: Create route guards for verification (AC: #5, #6)
+  - Update src/App.tsx routing configuration
+  - Add /verify-email route for VerificationPending page
+  - Add /email-verified route for success page
+  - Implement VerifiedRoute wrapper component
+  - Redirect unverified users from protected routes to /verify-email
+  - Allow verified users to access protected routes
+  - Prevent verified users from accessing /verify-email again
+
+- Task 6: Handle verification callback from Supabase (AC: #4)
+  - Create /auth/callback route handler
+  - Parse verification token from URL parameters
+  - Update auth state to reflect verification
+  - Redirect to /email-verified on success
+  - Handle verification errors (expired link, invalid token)
+
+- Task 7: Update signup flow to show verification prompt (AC: #1)
+  - Modify SignupForm.tsx to redirect to /verify-email after signup
+  - Pass user email to verification pending page via route state
+  - Ensure signup success message mentions email verification
+
+- Task 8: Add verification reminder in app header (AC: #6)
+  - Create VerificationBanner.tsx component
+  - Display banner at top of app for unverified users
+  - Show "Please verify your email" message with resend link
+  - Make banner dismissible but reappears on page refresh
+  - Hide banner once email is verified
+
+- Task 9: Testing and validation (All ACs)
+  - Test full signup → verification email → click link → verified flow
+  - Test resend verification email functionality
+  - Test unverified user blocked from accessing dashboard
+  - Test verified user can access all routes
+  - Test expired verification link handling
+  - Test verification email arrives within 60 seconds
+  - Test email template renders correctly (branding, link)
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+1. After signup, user sees "Check your email for verification link" message
+2. Verification email sent via Supabase Auth within 60 seconds
+3. Email contains branded message and verification link
+4. Clicking verification link marks email as verified in Supabase
+5. Verified users redirected to onboarding/dashboard
+6. Unverified users blocked from accessing app routes (redirect to verification pending page)
+7. Resend verification email option available if not received
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>Epic Breakdown - Story 1.2</title>
+        <section>Story 1.2: Email Verification Flow</section>
+        <snippet>As a new user, I want to verify my email address, so that I can activate my account and prove I own the email. Technical components include VerificationPending.tsx, EmailVerified.tsx, with Supabase built-in email verification and route guards checking user.email_confirmed_at before allowing access.</snippet>
+      </doc>
+      <doc>
+        <path>docs/PRD.md</path>
+        <title>Product Requirements Document</title>
+        <section>FR-1.1: User Registration</section>
+        <snippet>Email verification required before accessing core features. Email verification link valid for 24 hours. Users can reset forgotten passwords via email.</snippet>
+      </doc>
+      <doc>
+        <path>docs/PRD.md</path>
+        <title>Product Requirements Document</title>
+        <section>Web App Specific Requirements - Architecture</section>
+        <snippet>Frontend: React 18 with Vite, React Router v6 for client-side navigation, shadcn/ui components, Tailwind CSS. Backend: Supabase (PostgreSQL + Auth + Storage + Edge Functions). Authentication via Supabase Auth with JWT-based sessions.</snippet>
+      </doc>
+      <doc>
+        <path>docs/PRD.md</path>
+        <title>Product Requirements Document</title>
+        <section>NFR-S2: Authentication Security</section>
+        <snippet>JWT tokens expire after 30 days with refresh. Account lockout after 5 failed login attempts. Password reset tokens single-use, expire after 1 hour. Supabase Auth handles password hashing with bcrypt.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>Epic Breakdown</title>
+        <section>Epic 1: Foundation &amp; Authentication</section>
+        <snippet>Epic Goal: Enable secure user access with multiple authentication methods, establishing the foundation for all user-specific features. Story 1.1 (User Registration) must exist before 1.2 can be implemented, as it creates the AuthContext and Supabase Auth infrastructure.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <note>Greenfield project - no existing code. Story 1.1 (User Registration) will create the foundational auth infrastructure that Story 1.2 will extend.</note>
+      <expectedFiles>
+        <file>
+          <path>src/contexts/AuthContext.tsx</path>
+          <description>To be created in Story 1.1. Will be extended in this story to add email verification status checks.</description>
+        </file>
+        <file>
+          <path>src/components/auth/SignupForm.tsx</path>
+          <description>To be created in Story 1.1. Will be modified in this story to redirect to verification page after signup.</description>
+        </file>
+        <file>
+          <path>src/components/auth/AuthLayout.tsx</path>
+          <description>To be created in Story 1.1. Will be reused for consistent styling of verification pages.</description>
+        </file>
+        <file>
+          <path>src/lib/supabase.ts</path>
+          <description>To be created in Story 1.1. Supabase client configuration used for auth.resend() API.</description>
+        </file>
+      </expectedFiles>
+    </code>
+    <dependencies>
+      <node>
+        <package name="react" version="^18.0.0" />
+        <package name="react-dom" version="^18.0.0" />
+        <package name="vite" version="latest" />
+        <package name="react-router-dom" version="^6.0.0" />
+        <package name="@supabase/supabase-js" version="latest" />
+        <package name="tailwindcss" version="latest" />
+        <package name="react-hook-form" version="latest" />
+        <package name="zod" version="latest" />
+        <package name="@hookform/resolvers" version="latest" />
+        <note>shadcn/ui components are installed individually via CLI, not as a single package dependency</note>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+- Authentication flow depends on Story 1.1 (User Registration) being implemented first - AuthContext and Supabase Auth setup must exist
+- Email verification is handled entirely by Supabase Auth - no custom backend email service needed
+- Verification tokens are single-use and expire after 24 hours (configurable in Supabase dashboard)
+- Route protection strategy: Public routes allow unauthenticated access, Protected routes require user.email_confirmed_at !== null
+- Resend functionality must include rate limiting (max 1 per minute) to prevent spam and server load
+- All routes related to verification (/verify-email, /email-verified, /auth/callback) must be public routes
+- Email template customization is done in Supabase Dashboard (Authentication → Email Templates → Confirm signup), not in code
+- Verification redirect URL must match the app domain (configured in Supabase settings)
+- HTTPS-only communication enforced by Vercel deployment platform
+- Mobile-first responsive design - components must work on 640px+ screens
+- Performance target: verification callback processing &lt; 2 seconds
+- Security: email template must include PetLog branding to prevent phishing
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>Supabase Auth - Resend Verification Email</name>
+      <kind>Supabase API</kind>
+      <signature>
+await supabase.auth.resend({
+  type: 'signup',
+  email: user.email
+})
+      </signature>
+      <description>Resends verification email to user. Returns promise that resolves on success or rejects with error.</description>
+    </interface>
+    <interface>
+      <name>Supabase Auth - Get User</name>
+      <kind>Supabase API</kind>
+      <signature>
+const { data: { user } } = await supabase.auth.getUser()
+const isVerified = user?.email_confirmed_at !== null
+      </signature>
+      <description>Gets current authenticated user and checks email verification status via email_confirmed_at field.</description>
+    </interface>
+    <interface>
+      <name>Supabase Auth - State Change Listener</name>
+      <kind>Supabase API</kind>
+      <signature>
+supabase.auth.onAuthStateChange((event, session) => {
+  if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
+    // Update auth state with verification status
+    const isVerified = session?.user?.email_confirmed_at !== null
+  }
+})
+      </signature>
+      <description>Listens for auth state changes including verification completion. Used to update AuthContext in real-time.</description>
+    </interface>
+    <interface>
+      <name>AuthContext - isEmailVerified</name>
+      <kind>React Context</kind>
+      <signature>
+const { isEmailVerified, user } = useAuth()
+      </signature>
+      <description>Exposes email verification status from AuthContext. To be implemented by extending Story 1.1's AuthContext.</description>
+    </interface>
+    <interface>
+      <name>React Router - Protected Route Wrapper</name>
+      <kind>React Component Pattern</kind>
+      <signature>
+&lt;Route element={&lt;VerifiedRoute /&gt;}&gt;
+  &lt;Route path="/dashboard" element={&lt;Dashboard /&gt;} /&gt;
+&lt;/Route&gt;
+      </signature>
+      <description>Wrapper component that checks verification status before rendering protected routes. Redirects to /verify-email if not verified.</description>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+Testing follows manual testing approach for MVP as specified in PRD. No automated testing framework specified yet. Testing checklist includes end-to-end flow validation, error scenarios, edge cases, and performance validation (&lt;60s email delivery, &lt;2s callback processing). Key testing areas: email delivery timing, route protection, resend rate limiting, expired/invalid token handling, and multi-tab verification state sync.
+    </standards>
+    <locations>
+Tests will be manual for MVP. Future automated tests would be located in:
+- tests/ (root level test directory, mentioned in PRD technical stack)
+- src/components/**/*.test.tsx (component tests)
+- tests/integration/ (integration tests for auth flows)
+    </locations>
+    <ideas>
+Test Idea 1 (AC #1, #2, #3): End-to-end verification flow - Sign up new user, verify "Check your email" message appears, confirm email received within 60 seconds, verify email contains PetLog branding and working verification link
+
+Test Idea 2 (AC #4, #5): Verification completion - Click verification link, verify email marked as verified in Supabase (check user.email_confirmed_at), confirm redirect to dashboard
+
+Test Idea 3 (AC #6): Route protection - Attempt to access dashboard with unverified account, verify redirect to /verify-email page, complete verification, verify access granted to protected routes
+
+Test Idea 4 (AC #7): Resend functionality - Click resend button, verify new email sent within 60 seconds, test rate limiting by attempting multiple rapid resends (should block after first)
+
+Test Idea 5 (Edge Cases): Expired link handling - Use old verification link after 24 hours, verify error message and resend option displayed. Already verified - Click link after already verified, verify "already verified" message and dashboard redirect
+
+Test Idea 6 (Performance): Email delivery timing - Measure time from signup to email receipt, verify &lt;60 second target. Callback processing - Measure time from link click to verification completion, verify &lt;2 second target
+
+Test Idea 7 (Multi-tab): State synchronization - Verify email in one browser tab, verify auth state updates automatically in other open tabs without page refresh
+
+Test Idea 8 (Security): Rate limiting - Test resend rate limit (max 1/minute), verify server returns error on excessive requests. Token validation - Test with invalid/malformed token, verify graceful error handling
+    </ideas>
+  </tests>
+</story-context>
