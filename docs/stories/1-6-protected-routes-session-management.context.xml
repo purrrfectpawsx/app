@@ -1,0 +1,277 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>6</storyId>
+    <title>Protected Routes &amp; Session Management</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-05</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/stories/1-6-protected-routes-session-management.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a user</asA>
+    <iWant>my session to persist and my data to be protected</iWant>
+    <soThat>I don't have to log in constantly and my data stays private</soThat>
+    <tasks>
+      <task id="1" acs="1">
+        <description>Create ProtectedRoute component</description>
+        <subtasks>
+          <subtask>Create src/components/auth/ProtectedRoute.tsx</subtask>
+          <subtask>Check authentication status using useAuth hook</subtask>
+          <subtask>Redirect unauthenticated users to /login</subtask>
+          <subtask>Use React Router's Outlet component for nested routes</subtask>
+          <subtask>Handle loading state while checking auth</subtask>
+          <subtask>Preserve intended destination URL for redirect after login</subtask>
+        </subtasks>
+      </task>
+      <task id="2" acs="2">
+        <description>Implement public route protection</description>
+        <subtasks>
+          <subtask>Create src/components/auth/PublicRoute.tsx component</subtask>
+          <subtask>Check authentication status using useAuth hook</subtask>
+          <subtask>Redirect authenticated users from /login and /signup to /dashboard</subtask>
+          <subtask>Allow access to public routes for unauthenticated users</subtask>
+          <subtask>Handle loading state while checking auth</subtask>
+        </subtasks>
+      </task>
+      <task id="3" acs="3,4,5">
+        <description>Configure session persistence</description>
+        <subtasks>
+          <subtask>Verify Supabase client session persistence config (already in src/lib/supabase.ts)</subtask>
+          <subtask>Confirm persistSession: true and autoRefreshToken: true are set</subtask>
+          <subtask>Test JWT auto-refresh before expiration (Supabase handles automatically)</subtask>
+          <subtask>Verify session expiration after 30 days inactivity (Supabase default)</subtask>
+          <subtask>Test session persistence across browser tabs using BrowserStorageAdapter</subtask>
+        </subtasks>
+      </task>
+      <task id="4" acs="1,2">
+        <description>Update App.tsx routing structure</description>
+        <subtasks>
+          <subtask>Wrap protected routes with ProtectedRoute component</subtask>
+          <subtask>Wrap public auth routes (/login, /signup) with PublicRoute component</subtask>
+          <subtask>Keep other public routes (/, /forgot-password, /reset-password, /auth/callback) without wrapper</subtask>
+          <subtask>Verify route structure matches epic technical notes</subtask>
+          <subtask>Test navigation between public and protected routes</subtask>
+        </subtasks>
+      </task>
+      <task id="5" acs="6">
+        <description>Create logout functionality</description>
+        <subtasks>
+          <subtask>Verify signOut method exists in AuthContext (already implemented in Story 1.1)</subtask>
+          <subtask>Test signOut calls supabase.auth.signOut()</subtask>
+          <subtask>Verify session is cleared from localStorage/sessionStorage</subtask>
+          <subtask>Verify user state is set to null in AuthContext</subtask>
+          <subtask>Test redirect to /login after logout</subtask>
+        </subtasks>
+      </task>
+      <task id="6" acs="7">
+        <description>Create Header/Navigation with logout button</description>
+        <subtasks>
+          <subtask>Create src/components/layout/Header.tsx component</subtask>
+          <subtask>Add logout button (visible only when authenticated)</subtask>
+          <subtask>Use useAuth hook to check authentication status</subtask>
+          <subtask>Call signOut method on button click</subtask>
+          <subtask>Style header consistently with shadcn/ui components</subtask>
+          <subtask>Position header in app layout</subtask>
+        </subtasks>
+      </task>
+      <task id="7" acs="7">
+        <description>Integrate Header into app layout</description>
+        <subtasks>
+          <subtask>Update App.tsx to include Header component</subtask>
+          <subtask>Display Header only for authenticated users</subtask>
+          <subtask>Ensure Header persists across all protected routes</subtask>
+          <subtask>Test Header visibility on login/logout</subtask>
+        </subtasks>
+      </task>
+      <task id="8" acs="all">
+        <description>Testing and validation</description>
+        <subtasks>
+          <subtask>Test unauthenticated user accessing /dashboard redirects to /login</subtask>
+          <subtask>Test authenticated user accessing /login redirects to /dashboard</subtask>
+          <subtask>Test authenticated user accessing /signup redirects to /dashboard</subtask>
+          <subtask>Test session persists when opening new browser tab</subtask>
+          <subtask>Test JWT auto-refresh (monitor network tab for token refresh)</subtask>
+          <subtask>Test logout button visible when authenticated</subtask>
+          <subtask>Test logout button hidden when not authenticated</subtask>
+          <subtask>Test logout clears session and redirects to /login</subtask>
+          <subtask>Test login after logout works correctly</subtask>
+          <subtask>Test protected routes remain accessible after page refresh</subtask>
+          <subtask>Test navigation between protected routes without re-authentication</subtask>
+        </subtasks>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion id="1">Unauthenticated users accessing app routes redirect to `/login`</criterion>
+    <criterion id="2">Authenticated users cannot access `/login` or `/signup` (redirect to dashboard)</criterion>
+    <criterion id="3">Session persists across browser tabs</criterion>
+    <criterion id="4">JWT auto-refreshes before expiration (seamless, no interruption)</criterion>
+    <criterion id="5">Session expires after 30 days of inactivity</criterion>
+    <criterion id="6">Manual logout clears session and redirects to login</criterion>
+    <criterion id="7">Logout button visible in header/navigation when authenticated</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>Epic 1: Foundation &amp; Authentication</title>
+        <section>Story 1.6: Protected Routes &amp; Session Management</section>
+        <snippet>Protected routes ensure unauthenticated users redirect to login while authenticated users cannot access login/signup pages. Session persists across tabs with JWT auto-refresh. Logout button in header clears session.</snippet>
+      </doc>
+      <doc>
+        <path>docs/stories/1-1-user-registration-with-email-password.md</path>
+        <title>Story 1.1: User Registration</title>
+        <section>AuthContext and Session Setup</section>
+        <snippet>AuthContext created with user, session, loading states. Provides signUp, signIn, signOut methods. onAuthStateChange listener handles session updates. Supabase client configured in src/lib/supabase.ts with session persistence.</snippet>
+      </doc>
+      <doc>
+        <path>docs/stories/1-3-user-login-with-email-password.md</path>
+        <title>Story 1.3: User Login</title>
+        <section>Session Persistence</section>
+        <snippet>Remember me functionality implemented using localStorage vs sessionStorage. signIn method in AuthContext handles session storage based on rememberMe flag. Session persists across browser sessions when enabled.</snippet>
+      </doc>
+      <doc>
+        <path>docs/stories/1-4-google-oauth-integration.md</path>
+        <title>Story 1.4: Google OAuth Integration</title>
+        <section>OAuth Session Management</section>
+        <snippet>OAuth callback handler at /auth/callback processes Google OAuth and creates sessions. BrowserStorageAdapter custom storage checks both localStorage and sessionStorage. Session persistence works with OAuth flows.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/contexts/AuthContext.tsx</path>
+        <kind>context</kind>
+        <symbol>AuthContext, useAuth, AuthProvider</symbol>
+        <lines>1-167</lines>
+        <reason>Centralized auth state with user, session, loading. Provides signIn, signOut methods. Use for authentication checks in ProtectedRoute and PublicRoute components.</reason>
+      </artifact>
+      <artifact>
+        <path>src/lib/supabase.ts</path>
+        <kind>service</kind>
+        <symbol>supabase, BrowserStorageAdapter</symbol>
+        <lines>1-43</lines>
+        <reason>Supabase client with custom storage adapter. Session persistence config: persistSession: true, autoRefreshToken: true, detectSessionInUrl: true. BrowserStorageAdapter checks both localStorage and sessionStorage.</reason>
+      </artifact>
+      <artifact>
+        <path>src/components/auth/VerifiedRoute.tsx</path>
+        <kind>component</kind>
+        <symbol>VerifiedRoute</symbol>
+        <lines>1-30</lines>
+        <reason>Existing route guard that checks authentication and email verification. Pattern to follow for ProtectedRoute (checks user, loading state, uses Outlet). Can be combined with or replaced by ProtectedRoute.</reason>
+      </artifact>
+      <artifact>
+        <path>src/App.tsx</path>
+        <kind>config</kind>
+        <symbol>App</symbol>
+        <lines>1-48</lines>
+        <reason>Main routing configuration. Currently uses VerifiedRoute for /dashboard. Need to add ProtectedRoute wrapper for all protected routes and PublicRoute wrapper for /login and /signup.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <node>
+        <package name="react" version="^18.2.0" />
+        <package name="react-dom" version="^18.2.0" />
+        <package name="react-router-dom" version="^6.20.0" />
+        <package name="@supabase/supabase-js" version="^2.38.0" />
+        <package name="lucide-react" version="^0.294.0" />
+        <package name="@radix-ui/react-slot" version="^1.0.2" />
+        <package name="class-variance-authority" version="^0.7.0" />
+        <package name="clsx" version="^2.0.0" />
+        <package name="tailwind-merge" version="^2.1.0" />
+      </node>
+      <framework name="Vite" version="^5.0.0" />
+      <framework name="TypeScript" version="^5.2.2" />
+      <framework name="Tailwind CSS" version="^3.3.0" />
+      <framework name="shadcn/ui" description="Radix UI + Tailwind CSS components" />
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint>Use React Router v6 Outlet pattern for nested protected routes (established in VerifiedRoute)</constraint>
+    <constraint>Check authentication using useAuth() hook (user, loading, session states)</constraint>
+    <constraint>Handle loading state with spinner while checking auth (follow VerifiedRoute pattern)</constraint>
+    <constraint>Use Navigate component from react-router-dom for redirects with replace prop</constraint>
+    <constraint>ProtectedRoute should redirect unauthenticated users to /login</constraint>
+    <constraint>PublicRoute should redirect authenticated users to /dashboard</constraint>
+    <constraint>Preserve intended destination URL for redirect after login (use location state)</constraint>
+    <constraint>Use shadcn/ui components for UI consistency (Button, Loader2 from lucide-react)</constraint>
+    <constraint>signOut method already exists in AuthContext - reuse it, don't recreate</constraint>
+    <constraint>Session persistence and auto-refresh already configured in Supabase client - verify, don't reconfigure</constraint>
+    <constraint>VerifiedRoute checks email verification - ProtectedRoute may need to work with or replace it</constraint>
+    <constraint>Create new src/components/layout/ directory for Header component</constraint>
+  </constraints>
+  <interfaces>
+    <interface>
+      <name>useAuth hook</name>
+      <kind>React Hook</kind>
+      <signature>{ user: User | null, session: Session | null, loading: boolean, isEmailVerified: boolean, signIn, signUp, signOut, resendVerificationEmail }</signature>
+      <path>src/contexts/AuthContext.tsx</path>
+    </interface>
+    <interface>
+      <name>signOut method</name>
+      <kind>Auth Method</kind>
+      <signature>signOut(): Promise&lt;void&gt; - calls supabase.auth.signOut()</signature>
+      <path>src/contexts/AuthContext.tsx</path>
+    </interface>
+    <interface>
+      <name>Outlet component</name>
+      <kind>React Router Component</kind>
+      <signature>&lt;Outlet /&gt; - renders nested route content</signature>
+      <path>react-router-dom</path>
+    </interface>
+    <interface>
+      <name>Navigate component</name>
+      <kind>React Router Component</kind>
+      <signature>&lt;Navigate to="/path" replace /&gt; - programmatic navigation</signature>
+      <path>react-router-dom</path>
+    </interface>
+    <interface>
+      <name>useLocation hook</name>
+      <kind>React Router Hook</kind>
+      <signature>useLocation(): Location - get current location with state</signature>
+      <path>react-router-dom</path>
+    </interface>
+    <interface>
+      <name>supabase.auth.onAuthStateChange</name>
+      <kind>Supabase API</kind>
+      <signature>onAuthStateChange(callback: (event, session) =&gt; void): { data: { subscription } }</signature>
+      <path>src/lib/supabase.ts</path>
+    </interface>
+  </interfaces>
+  <tests>
+    <standards>Manual testing is the current standard for this project (no automated test framework configured yet, as noted in Stories 1.1-1.4). Testing should cover all acceptance criteria with manual verification. Document test scenarios and results in the story completion notes. Future stories may introduce automated testing with Vitest or React Testing Library.</standards>
+    <locations>No automated test directory exists yet. Manual testing performed via dev server (npm run dev) and browser DevTools for route navigation and session management verification.</locations>
+    <ideas>
+      <idea ac="1">Test unauthenticated user accessing /dashboard redirects to /login</idea>
+      <idea ac="1">Test unauthenticated user accessing any protected route redirects to /login</idea>
+      <idea ac="1">Test redirect preserves intended destination URL for post-login redirect</idea>
+      <idea ac="2">Test authenticated user accessing /login redirects to /dashboard</idea>
+      <idea ac="2">Test authenticated user accessing /signup redirects to /dashboard</idea>
+      <idea ac="2">Test authenticated user can access /forgot-password and /reset-password (public routes)</idea>
+      <idea ac="3">Test session persists when opening new browser tab</idea>
+      <idea ac="3">Test session persists when refreshing page</idea>
+      <idea ac="3">Test BrowserStorageAdapter reads session from both localStorage and sessionStorage</idea>
+      <idea ac="4">Test JWT auto-refresh by monitoring network tab for token refresh requests</idea>
+      <idea ac="4">Test session remains active without user interruption during token refresh</idea>
+      <idea ac="5">Verify session configuration in src/lib/supabase.ts (persistSession, autoRefreshToken)</idea>
+      <idea ac="5">Test session expiration after 30 days (document Supabase default behavior)</idea>
+      <idea ac="6">Test logout button calls signOut method</idea>
+      <idea ac="6">Test logout clears session from localStorage and sessionStorage</idea>
+      <idea ac="6">Test logout sets user state to null in AuthContext</idea>
+      <idea ac="6">Test logout redirects to /login automatically (via ProtectedRoute)</idea>
+      <idea ac="6">Test login after logout works correctly</idea>
+      <idea ac="7">Test logout button visible in Header when authenticated</idea>
+      <idea ac="7">Test logout button hidden when not authenticated</idea>
+      <idea ac="7">Test Header persists across all protected routes</idea>
+      <idea ac="7">Test Header visibility changes on login/logout</idea>
+      <idea ac="all">Test loading spinner appears while checking authentication status</idea>
+      <idea ac="all">Test navigation between protected routes without re-authentication</idea>
+      <idea ac="all">Test ProtectedRoute and VerifiedRoute work together (if combined)</idea>
+      <idea ac="all">Test PublicRoute allows access to /auth/callback, /verify-email, /email-verified</idea>
+    </ideas>
+  </tests>
+</story-context>

@@ -1,0 +1,291 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>4</storyId>
+    <title>Google OAuth Integration</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-04</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/stories/1-4-google-oauth-integration.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a user who prefers quick signup</asA>
+    <iWant>to log in with my Google account</iWant>
+    <soThat>I can skip creating a new password and access the app faster</soThat>
+    <tasks>
+      - Task 1: Configure Google OAuth in Supabase (AC: #2, #3)
+        - Enable Google provider in Supabase Auth settings
+        - Add Google Client ID and Client Secret
+        - Configure OAuth callback URL
+        - Test OAuth configuration in Supabase dashboard
+
+      - Task 2: Create GoogleOAuthButton component (AC: #1)
+        - Create src/components/auth/GoogleOAuthButton.tsx
+        - Add Google icon (from lucide-react or Google brand assets)
+        - Implement signInWithOAuth call
+        - Style button per Google branding guidelines
+        - Add loading state during OAuth redirect
+
+      - Task 3: Add OAuth callback handler (AC: #3, #4)
+        - Create /auth/callback route in App.tsx
+        - Handle OAuth response from Google
+        - Check if user profile exists in profiles table
+        - Create profile if first-time OAuth login
+        - Redirect to dashboard on success
+        - Integrate with VerifiedRoute guard
+
+      - Task 4: Integrate button into auth pages (AC: #1)
+        - Add GoogleOAuthButton to SignupPage
+        - Add GoogleOAuthButton to LoginPage
+        - Add visual separator ("OR" divider) between email/password and OAuth
+        - Ensure consistent positioning and styling
+
+      - Task 5: Handle OAuth errors (AC: #5)
+        - Catch OAuth errors from Supabase
+        - Display user-friendly error messages
+        - Provide retry option (re-click button)
+        - Handle network errors
+        - Handle cancelled consent (user closes popup)
+
+      - Task 6: Testing and validation (All ACs)
+        - Test successful Google OAuth signup (new user)
+        - Test successful Google OAuth login (existing user)
+        - Test OAuth error handling (invalid credentials, network errors)
+        - Test profile creation for first-time OAuth users
+        - Test redirect to dashboard
+        - Verify session persistence works with OAuth
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    1. "Continue with Google" button appears on signup and login pages
+    2. Clicking button opens Google OAuth consent screen
+    3. Successful OAuth creates/logs in user and redirects to dashboard
+    4. User profile created automatically with name and email from Google
+    5. OAuth failures show clear error message with retry option
+    6. Google OAuth users can set password later (optional account linking)
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <artifact>
+        <path>docs/epics.md</path>
+        <title>Epic 1: Foundation & Authentication</title>
+        <section>Story 1.4: Google OAuth Integration</section>
+        <snippet>OAuth integration with Google provider. Components: GoogleOAuthButton.tsx, Supabase OAuth config, callback handler at /auth/callback. Profile creation triggered on first OAuth login.</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/PRD.md</path>
+        <title>Product Requirements Document</title>
+        <section>Authentication Methods</section>
+        <snippet>Google OAuth: Social login via Google (faster onboarding, higher conversion). Email verification required for new accounts.</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/stories/1-3-user-login-with-email-password.md</path>
+        <title>Story 1.3: User Login with Email/Password</title>
+        <section>Dev Notes - Learnings</section>
+        <snippet>BrowserStorageAdapter for dual-storage session support. AuthContext pattern for centralized auth state. Real-time form validation with React Hook Form + Zod. Generic error messages for security.</snippet>
+      </artifact>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/contexts/AuthContext.tsx</path>
+        <kind>context</kind>
+        <symbol>AuthContext, AuthProvider, useAuth</symbol>
+        <lines>5-160</lines>
+        <reason>Provides centralized auth state management with signUp, signIn, signOut methods. Need to add OAuth sign-in method here.</reason>
+      </artifact>
+      <artifact>
+        <path>src/lib/supabase.ts</path>
+        <kind>service</kind>
+        <symbol>supabase, BrowserStorageAdapter</symbol>
+        <lines>1-40</lines>
+        <reason>Supabase client configuration with custom storage adapter. Will use supabase.auth.signInWithOAuth() for Google OAuth.</reason>
+      </artifact>
+      <artifact>
+        <path>src/components/auth/AuthLayout.tsx</path>
+        <kind>component</kind>
+        <symbol>AuthLayout</symbol>
+        <lines>all</lines>
+        <reason>Reusable layout component for auth pages. Google OAuth button should be integrated within this layout pattern.</reason>
+      </artifact>
+      <artifact>
+        <path>src/pages/LoginPage.tsx</path>
+        <kind>page</kind>
+        <symbol>LoginPage</symbol>
+        <lines>all</lines>
+        <reason>Login page where Google OAuth button needs to be added alongside email/password form.</reason>
+      </artifact>
+      <artifact>
+        <path>src/pages/SignupPage.tsx</path>
+        <kind>page</kind>
+        <symbol>SignupPage</symbol>
+        <lines>all</lines>
+        <reason>Signup page where Google OAuth button needs to be added alongside email/password form.</reason>
+      </artifact>
+      <artifact>
+        <path>src/App.tsx</path>
+        <kind>routing</kind>
+        <symbol>App routes</symbol>
+        <lines>16-41</lines>
+        <reason>Contains routing configuration. OAuth callback route at /auth/callback already exists and needs OAuth handler implementation.</reason>
+      </artifact>
+      <artifact>
+        <path>src/components/auth/VerifiedRoute.tsx</path>
+        <kind>component</kind>
+        <symbol>VerifiedRoute</symbol>
+        <lines>all</lines>
+        <reason>Protected route guard that checks email verification. OAuth users must also pass through this verification.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <npm>
+        <package name="@supabase/supabase-js" version="^2.38.0" reason="Supabase client for OAuth integration" />
+        <package name="react" version="^18.2.0" reason="React framework" />
+        <package name="react-router-dom" version="^6.20.0" reason="Routing for OAuth callback handler" />
+        <package name="lucide-react" version="^0.294.0" reason="Icon library for Google icon" />
+        <package name="react-hook-form" version="^7.48.0" reason="Form handling patterns" />
+        <package name="zod" version="^3.22.0" reason="Validation schemas" />
+      </npm>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <architectural>
+      - Follow AuthContext pattern for centralized auth state management
+      - Reuse existing AuthLayout component for consistent auth page layout
+      - Use BrowserStorageAdapter for session storage (supports rememberMe functionality)
+      - Integrate with existing VerifiedRoute guard for protected routes
+      - Session management must work with existing dual-storage pattern (localStorage/sessionStorage)
+    </architectural>
+    <security>
+      - Use generic error messages (don't leak credential details)
+      - OAuth users must also pass email verification check before accessing protected routes
+      - Profile creation must be atomic (user account + profile table entry)
+      - Handle OAuth cancellation gracefully without breaking auth flow
+    </security>
+    <ui>
+      - Follow Google branding guidelines for OAuth button
+      - Button text must be "Continue with Google" (not "Sign in" or "Login")
+      - Use official Google logo from lucide-react or Google brand assets
+      - Add loading state during OAuth redirect
+      - Add visual separator ("OR" divider) between email/password and OAuth options
+    </ui>
+    <testing>
+      - Manual testing is acceptable (no automated test framework configured yet)
+      - Test both new user signup and existing user login flows
+      - Test error handling (network errors, cancelled consent, invalid config)
+      - Verify session persistence works with OAuth sessions
+    </testing>
+  </constraints>
+  <interfaces>
+    <interface>
+      <name>AuthContext</name>
+      <kind>React Context API</kind>
+      <signature>
+        interface AuthContextType {
+          user: User | null
+          session: Session | null
+          loading: boolean
+          signUp: (email: string, password: string, name: string) => Promise&lt;void&gt;
+          signIn: (email: string, password: string, rememberMe?: boolean) => Promise&lt;void&gt;
+          signOut: () => Promise&lt;void&gt;
+        }
+      </signature>
+      <path>src/contexts/AuthContext.tsx</path>
+      <note>Will need to add OAuth sign-in method or extend signIn to handle OAuth flow</note>
+    </interface>
+    <interface>
+      <name>Supabase Auth - signInWithOAuth</name>
+      <kind>API method</kind>
+      <signature>
+        supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: `${window.location.origin}/auth/callback`
+          }
+        })
+      </signature>
+      <path>src/lib/supabase.ts</path>
+      <note>Primary method for initiating Google OAuth flow</note>
+    </interface>
+    <interface>
+      <name>OAuth Callback Route</name>
+      <kind>React Router route</kind>
+      <signature>/auth/callback</signature>
+      <path>src/App.tsx</path>
+      <note>Route already exists but needs handler component implementation (AuthCallback component)</note>
+    </interface>
+    <interface>
+      <name>Profiles Table Schema</name>
+      <kind>Database schema</kind>
+      <signature>
+        profiles {
+          id: uuid (FK to auth.users)
+          email: string
+          name: string
+          created_at: timestamp
+          subscription_tier: string (default: 'free')
+        }
+      </signature>
+      <path>Supabase database</path>
+      <note>OAuth handler must check if profile exists and create if first-time login</note>
+    </interface>
+  </interfaces>
+  <tests>
+    <standards>
+      No automated test framework is currently configured. Manual testing is acceptable for this story.
+      Testing approach from previous stories: Test all acceptance criteria manually, verify error states,
+      test session persistence, and ensure integration with existing auth flows.
+      Consider adding automated tests in future epic.
+    </standards>
+    <locations>
+      No test directory exists yet. When automated tests are added, follow pattern:
+      - Component tests: src/__tests__/components/auth/
+      - Integration tests: src/__tests__/integration/
+      - E2E tests: e2e/ (if Playwright or Cypress added)
+    </locations>
+    <ideas>
+      <test ac="1">
+        - Verify "Continue with Google" button appears on LoginPage
+        - Verify "Continue with Google" button appears on SignupPage
+        - Check button styling follows Google branding guidelines
+        - Verify visual separator ("OR" divider) is displayed correctly
+      </test>
+      <test ac="2">
+        - Click Google OAuth button and verify redirect to Google consent screen
+        - Verify redirectTo parameter includes /auth/callback
+        - Test button loading state during redirect
+      </test>
+      <test ac="3">
+        - Complete OAuth flow and verify user is redirected to /dashboard
+        - Verify session is created in Supabase Auth
+        - Verify AuthContext updates with user data
+        - Test VerifiedRoute integration (OAuth users can access protected routes)
+      </test>
+      <test ac="4">
+        - First-time OAuth user: Verify profile is created in profiles table
+        - Verify profile contains name from Google (user_metadata.full_name)
+        - Verify profile contains email from Google
+        - Verify subscription_tier defaults to 'free'
+        - Existing OAuth user: Verify no duplicate profile created
+      </test>
+      <test ac="5">
+        - Test network error during OAuth: Verify error message displayed
+        - Test cancelled OAuth consent: Verify graceful handling with retry option
+        - Test invalid OAuth configuration: Verify error message
+        - Test profile creation failure: Verify error message with support contact
+      </test>
+      <test ac="6">
+        - Verify OAuth users can later set password (account linking)
+        - Test account linking flow (optional - may be future story)
+      </test>
+      <test general="session persistence">
+        - Test OAuth session persists across page refreshes
+        - Test OAuth session works with BrowserStorageAdapter
+        - Verify logout clears OAuth session properly
+      </test>
+    </ideas>
+  </tests>
+</story-context>
