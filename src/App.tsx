@@ -6,6 +6,8 @@ import { LoginPage } from '@/pages/LoginPage'
 import { VerifyEmailPage } from '@/pages/VerifyEmailPage'
 import { EmailVerifiedPage } from '@/pages/EmailVerifiedPage'
 import { AuthCallback } from '@/pages/AuthCallback'
+import { ForgotPassword } from '@/pages/ForgotPassword'
+import { ResetPassword } from '@/pages/ResetPassword'
 import { VerifiedRoute } from '@/components/auth/VerifiedRoute'
 
 function App() {
@@ -21,6 +23,8 @@ function App() {
           <Route path="/verify-email" element={<VerifyEmailPage />} />
           <Route path="/email-verified" element={<EmailVerifiedPage />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
 
           {/* Protected routes - require email verification */}
           <Route element={<VerifiedRoute />}>

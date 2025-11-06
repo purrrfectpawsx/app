@@ -1,4 +1,4 @@
-# generated: 2025-11-03
+# generated: 2025-11-06
 # project: app
 # project_key: app
 # tracking_system: file-system
@@ -29,7 +29,7 @@
 # - SM typically drafts next story after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', SM reviews, then Dev moves to 'done'
 
-generated: 2025-11-03
+generated: 2025-11-06
 project: app
 project_key: app
 tracking_system: file-system
@@ -41,7 +41,7 @@ development_status:
   1-2-email-verification-flow: done
   1-3-user-login-with-email-password: done
   1-4-google-oauth-integration: done
-  1-5-password-reset-flow: ready-for-dev
+  1-5-password-reset-flow: review
   1-6-protected-routes-session-management: ready-for-dev
   epic-1-retrospective: optional
 
