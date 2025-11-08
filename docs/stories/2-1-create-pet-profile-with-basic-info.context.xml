@@ -1,0 +1,377 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>2</epicId>
+    <storyId>1</storyId>
+    <title>Create Pet Profile with Basic Info</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-08</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/stories/2-1-create-pet-profile-with-basic-info.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a pet owner</asA>
+    <iWant>to create a pet profile with name, species, and photo</iWant>
+    <soThat>I can start tracking my pet's health and expenses</soThat>
+    <tasks>
+      - Task 1: Create database schema for pets table (AC: #6)
+        - Create Supabase migration for pets table with columns: id (uuid), user_id (FK to profiles), name, species, breed, birth_date, photo_url, gender, spayed_neutered, microchip, notes, created_at
+        - Add species enum constraint: 'dog', 'cat', 'bird', 'rabbit', 'other'
+        - Set up CASCADE DELETE foreign key constraint from pets.user_id to profiles.id
+        - Create RLS policy: users can only access their own pets (user_id = auth.uid())
+        - Create index on user_id for query performance
+        - Test: Verify table creation and RLS policies work correctly
+
+      - Task 2: Set up Supabase Storage bucket for pet photos (AC: #3)
+        - Create 'pets-photos' storage bucket in Supabase
+        - Configure RLS policies: users can only upload/view their own pet photos
+        - Set max file size to 5MB
+        - Configure allowed MIME types: image/jpeg, image/png, image/heic
+        - Test: Verify upload permissions and file type restrictions
+
+      - Task 3: Create pet form validation schema (AC: #1, #4)
+        - Create Zod schema in src/lib/validations.ts for pet creation
+        - Define required fields: name (min 1 char), species (enum validation)
+        - Define optional fields: breed, birth_date (valid date, not future), gender, spayed_neutered, microchip, notes
+        - Export TypeScript type from Zod schema for form data
+        - Test: Verify schema validation catches required field errors
+
+      - Task 4: Create PetPhotoUpload component (AC: #3, #7)
+        - Create src/components/pets/PetPhotoUpload.tsx component
+        - Implement file input with image preview
+        - Add browser-image-compression for client-side compression (target: 50-70% reduction)
+        - Validate file type (JPG, PNG, HEIC) and size (<5MB)
+        - Show upload progress indicator
+        - Display thumbnail preview after upload
+        - Allow photo removal (clear selection)
+        - Test: Verify compression works and preview displays
+
+      - Task 5: Create CreatePetForm component (AC: #1, #2, #4, #5)
+        - Create src/components/pets/CreatePetForm.tsx component
+        - Integrate React Hook Form with Zod validation schema
+        - Add name input (text, required)
+        - Add species dropdown with icons (lucide-react: Dog, Cat, Bird, Rabbit, MoreHorizontal for Other)
+        - Add optional fields: breed (text), birth date (date picker), gender (dropdown), spayed/neutered (checkbox), microchip (text), notes (textarea)
+        - Integrate PetPhotoUpload component
+        - Display real-time validation errors
+        - Add submit and cancel buttons
+        - Test: Verify form validation and field rendering
+
+      - Task 6: Implement pet creation logic with free tier check (AC: #5, #6)
+        - Create usePets hook in src/hooks/usePets.ts
+        - Implement createPet function with free tier enforcement
+        - Handle photo upload and compression
+        - Handle errors: display user-friendly messages
+        - Test: Verify free tier limit enforcement and pet creation flow
+
+      - Task 7: Create UpgradePromptDialog component (AC: #6)
+        - Create src/components/subscription/UpgradePromptDialog.tsx component
+        - Display dialog when free tier user tries to create 2nd pet
+        - Show upgrade message and link to /pricing
+        - Style with shadcn/ui AlertDialog component
+        - Test: Verify dialog displays correct message and links
+
+      - Task 8: Create pet detail page route (AC: #5)
+        - Create src/pages/PetDetailPage.tsx page component
+        - Add route to App.tsx: /pets/:petId (protected route)
+        - Fetch pet data by ID using Supabase
+        - Display pet basic info: photo, name, species, breed, birth date, age
+        - Add placeholder sections for Health, Expenses, Reminders, Documents tabs
+        - Handle loading state and 404 if pet not found
+        - Test: Verify page loads with pet data and handles errors
+
+      - Task 9: Add navigation to create pet form (AC: #1)
+        - Add "Create Pet" button to pets dashboard/grid
+        - Open CreatePetForm in modal/dialog or dedicated page
+        - Use shadcn/ui Dialog component for modal approach
+        - Test: Verify modal opens and form displays correctly
+
+      - Task 10: Implement success flow and navigation (AC: #5)
+        - On successful pet creation, show toast notification
+        - Navigate to pet detail page
+        - Close create pet modal if using modal approach
+        - Refresh pets list to show new pet
+        - Test: Verify success message displays and navigation works
+
+      - Task 11: Testing and edge cases (All ACs)
+        - Comprehensive manual testing checklist covering all acceptance criteria
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    1. Create pet form displays: name (required), species dropdown (required: dog, cat, bird, rabbit, other), breed (optional), birth date (optional), photo upload (optional)
+    2. Species dropdown shows common pet types with icons
+    3. Photo upload supports JPG, PNG, HEIC up to 5MB
+    4. Form validates required fields before submission
+    5. Successful creation shows success message and navigates to pet detail page
+    6. Free tier users can create 1 pet (enforced in backend)
+    7. Photo compressed client-side before upload (50-70% size reduction)
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>Epic 2: Pet Profile Management</title>
+        <section>Story 2.1: Create Pet Profile with Basic Info</section>
+        <snippet>Enable users to create and manage pet profiles, establishing the core entity around which all tracking features are built. Technical stack includes CreatePetForm.tsx, PetPhotoUpload.tsx components, pets table in Supabase, pets-photos storage bucket with RLS, browser-image-compression for client-side image optimization, and React Hook Form + Zod validation.</snippet>
+      </doc>
+      <doc>
+        <path>docs/PRD.md</path>
+        <title>Product Requirements Document</title>
+        <section>Freemium Business Model</section>
+        <snippet>PetLog operates on a freemium model with a free tier allowing 1 pet and premium tier ($7/month) for unlimited pets. Free tier users attempting to create a 2nd pet should see an upgrade prompt. Strong conversion rate (20%+) validates the freemium model.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Backend Services - Supabase Storage</section>
+        <snippet>Supabase Storage provides S3-compatible API integrated with RLS for security, CDN for fast delivery, image transformations (resize, optimize), and resumable uploads. Photos should be uploaded to user-specific folders with RLS policies ensuring users can only access their own files.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Frontend ↔ Supabase Integration</section>
+        <snippet>File upload pattern: 1) Compress image client-side using imageCompression, 2) Upload to Supabase Storage bucket (pets-photos), 3) Get public URL from upload response, 4) Store URL in database pets table. All queries automatically include JWT token for RLS enforcement.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Backend Services - Row Level Security (RLS)</section>
+        <snippet>Database-level security ensures users can only access their own data through policies enforced at query level. RLS policies must be created for pets table to ensure user_id = auth.uid() for all CRUD operations.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/contexts/AuthContext.tsx</path>
+        <kind>context</kind>
+        <symbol>AuthContext, AuthProvider</symbol>
+        <lines>1-80</lines>
+        <reason>Provides user authentication state (user, session, isEmailVerified) and auth methods (signUp, signIn, signOut). Pet creation requires authenticated user context. Contains subscription_tier logic in profiles table creation.</reason>
+      </artifact>
+      <artifact>
+        <path>src/lib/supabase.ts</path>
+        <kind>client</kind>
+        <symbol>supabase</symbol>
+        <lines>1-43</lines>
+        <reason>Configured Supabase client with custom storage adapter for auth persistence. All database queries and storage uploads use this client instance. Required for pets table operations and photo uploads.</reason>
+      </artifact>
+      <artifact>
+        <path>src/components/auth/ProtectedRoute.tsx</path>
+        <kind>component</kind>
+        <symbol>ProtectedRoute</symbol>
+        <lines>N/A</lines>
+        <reason>HOC wrapper for protected routes requiring authentication. Pet creation routes and pet detail pages should use this component to ensure only authenticated users can access.</reason>
+      </artifact>
+      <artifact>
+        <path>src/components/auth/VerifiedRoute.tsx</path>
+        <kind>component</kind>
+        <symbol>VerifiedRoute</symbol>
+        <lines>N/A</lines>
+        <reason>HOC wrapper for routes requiring both authentication AND email verification. Consider using for pet-related routes to ensure verified users only.</reason>
+      </artifact>
+      <artifact>
+        <path>src/schemas/auth.ts</path>
+        <kind>validation</kind>
+        <symbol>signupSchema, loginSchema</symbol>
+        <lines>1-45</lines>
+        <reason>Example Zod validation schemas for forms. Shows pattern for creating validation schemas with React Hook Form resolver. Pet form validation should follow this pattern in src/lib/validations.ts or src/schemas/pets.ts.</reason>
+      </artifact>
+      <artifact>
+        <path>src/components/auth/SignupForm.tsx</path>
+        <kind>component</kind>
+        <symbol>SignupForm</symbol>
+        <lines>1-100</lines>
+        <reason>Example React Hook Form implementation with Zod validation, real-time error handling, loading states, and user-friendly error messages. CreatePetForm should follow this pattern for form structure and validation.</reason>
+      </artifact>
+      <artifact>
+        <path>src/App.tsx</path>
+        <kind>routing</kind>
+        <symbol>App</symbol>
+        <lines>1-59</lines>
+        <reason>Shows routing structure with VerifiedRoute wrapper for protected routes. Pet detail page route (/pets/:petId) should be added under VerifiedRoute element. Currently has /dashboard as placeholder.</reason>
+      </artifact>
+      <artifact>
+        <path>src/components/ui/button.tsx</path>
+        <kind>ui-component</kind>
+        <symbol>Button</symbol>
+        <lines>N/A</lines>
+        <reason>shadcn/ui Button component for consistent button styling across app. Use for form submit, cancel, and action buttons.</reason>
+      </artifact>
+      <artifact>
+        <path>src/components/ui/input.tsx</path>
+        <kind>ui-component</kind>
+        <symbol>Input</symbol>
+        <lines>N/A</lines>
+        <reason>shadcn/ui Input component for text inputs. Use for name, breed, microchip fields in CreatePetForm.</reason>
+      </artifact>
+      <artifact>
+        <path>src/components/ui/label.tsx</path>
+        <kind>ui-component</kind>
+        <symbol>Label</symbol>
+        <lines>N/A</lines>
+        <reason>shadcn/ui Label component for form labels. Use with inputs for accessibility.</reason>
+      </artifact>
+      <artifact>
+        <path>src/components/ui/checkbox.tsx</path>
+        <kind>ui-component</kind>
+        <symbol>Checkbox</symbol>
+        <lines>N/A</lines>
+        <reason>shadcn/ui Checkbox component. Use for spayed/neutered boolean field in pet form.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <framework name="React" version="18.2.0" />
+      <framework name="TypeScript" version="5.2.2" />
+      <framework name="Vite" version="5.0.0" />
+      <package name="@supabase/supabase-js" version="2.38.0" purpose="Database and storage client" />
+      <package name="react-router-dom" version="6.20.0" purpose="Client-side routing and navigation" />
+      <package name="react-hook-form" version="7.48.0" purpose="Form state management and validation" />
+      <package name="@hookform/resolvers" version="3.3.0" purpose="Zod resolver for React Hook Form" />
+      <package name="zod" version="3.22.0" purpose="Schema validation and type inference" />
+      <package name="lucide-react" version="0.294.0" purpose="Icon library (Dog, Cat, Bird, Rabbit icons for species)" />
+      <package name="tailwindcss" version="3.3.0" purpose="Utility-first CSS framework" />
+      <package name="@radix-ui/react-checkbox" version="1.3.3" purpose="Accessible checkbox primitive (shadcn/ui)" />
+      <package name="@radix-ui/react-label" version="2.0.2" purpose="Accessible label primitive (shadcn/ui)" />
+      <package name="class-variance-authority" version="0.7.0" purpose="CSS variant utilities for components" />
+      <note>MISSING: browser-image-compression library needs to be installed for photo compression (AC #7)</note>
+      <note>MISSING: @radix-ui/react-select and @radix-ui/react-dialog for Select and Dialog components</note>
+      <note>MISSING: date-fns for date handling and age calculations</note>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    - Use React Hook Form + Zod pattern established in Epic 1 for all form validation
+    - Follow shadcn/ui component patterns for consistent styling and accessibility
+    - All database operations must use Supabase RLS policies (user_id = auth.uid())
+    - Photos must be compressed client-side before upload (target 50-70% reduction, max 1MB)
+    - Free tier enforcement MUST be checked in backend (profiles.subscription_tier = 'free' AND pet count >= 1)
+    - Use AuthContext for user state - do not create separate auth state management
+    - Follow project structure: components/pets/, components/subscription/, hooks/, types/, schemas/ or lib/validations.ts
+    - Use VerifiedRoute wrapper for all pet-related routes (requires auth + email verification)
+    - Error messages must be user-friendly, technical errors logged to console only
+    - No automated tests required (manual testing acceptable per Story 1.6 precedent)
+    - TypeScript strict mode: no any types, proper type imports, export types from Zod schemas
+    - Use Loader2 icon from lucide-react for loading spinners (consistency with auth flows)
+    - Navigation uses React Router navigate() function, not window.location
+    - Toast notifications for success/error messages (pattern from auth components)
+    - Photo storage path format: {userId}/{petId}.{ext} in pets-photos bucket
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>Supabase Storage Upload API</name>
+      <kind>Storage API</kind>
+      <signature>
+        const { data, error } = await supabase.storage
+          .from('pets-photos')
+          .upload(`${userId}/${petId}.jpg`, compressedFile)
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('pets-photos')
+          .getPublicUrl(path)
+      </signature>
+      <path>src/lib/supabase.ts</path>
+    </interface>
+    <interface>
+      <name>Supabase Database Query API</name>
+      <kind>Database API</kind>
+      <signature>
+        // Create pet
+        const { data, error } = await supabase
+          .from('pets')
+          .insert({ user_id, name, species, breed, photo_url, ... })
+          .select()
+          .single()
+
+        // Count user's pets (for free tier check)
+        const { count } = await supabase
+          .from('pets')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', userId)
+      </signature>
+      <path>src/lib/supabase.ts</path>
+    </interface>
+    <interface>
+      <name>Profiles Table Schema</name>
+      <kind>Database Schema</kind>
+      <signature>
+        profiles {
+          id: uuid (PK, FK to auth.users)
+          email: text
+          name: text
+          subscription_tier: text ('free' | 'premium')
+          created_at: timestamp
+          updated_at: timestamp
+        }
+      </signature>
+      <path>Database (created in Epic 1)</path>
+    </interface>
+    <interface>
+      <name>Pets Table Schema (NEW)</name>
+      <kind>Database Schema</kind>
+      <signature>
+        pets {
+          id: uuid (PK, default uuid_generate_v4())
+          user_id: uuid (FK to profiles, ON DELETE CASCADE)
+          name: text NOT NULL
+          species: text NOT NULL CHECK (IN 'dog', 'cat', 'bird', 'rabbit', 'other')
+          breed: text
+          birth_date: date
+          photo_url: text
+          gender: text CHECK (IN 'male', 'female', 'unknown')
+          spayed_neutered: boolean (default false)
+          microchip: text
+          notes: text
+          created_at: timestamp (default now())
+          updated_at: timestamp (default now())
+        }
+        INDEX idx_pets_user_id ON pets(user_id)
+        RLS: Users can only access pets WHERE user_id = auth.uid()
+      </signature>
+      <path>Database migration (Task 1)</path>
+    </interface>
+    <interface>
+      <name>React Hook Form + Zod Pattern</name>
+      <kind>Form Validation</kind>
+      <signature>
+        const { register, handleSubmit, formState: { errors } } = useForm&lt;PetFormData&gt;({
+          resolver: zodResolver(petFormSchema),
+          mode: 'onChange', // Real-time validation
+        })
+
+        const onSubmit = async (data: PetFormData) => { ... }
+      </signature>
+      <path>src/components/auth/SignupForm.tsx (example)</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Testing uses Playwright for E2E tests with two modes: smoke tests (@smoke tag, real Supabase backend) and mocked tests (MSW mocks). Tests are organized by story (e.g., story-1-1-signup.spec.ts) and validate all acceptance criteria. Test utilities in tests/utils/ provide reusable helpers (auth.ts for auth flows). Fixtures in tests/fixtures/ provide test data (users.ts for user generation). Tests follow pattern: describe by story, test by AC, use page.getByLabel/getByRole for accessibility, expect for assertions.
+    </standards>
+    <locations>
+      tests/e2e/*.spec.ts - E2E tests for stories
+      tests/e2e/*.smoke.spec.ts - Smoke tests with @smoke tag
+      tests/utils/ - Reusable test utilities
+      tests/fixtures/ - Test data fixtures
+      tests/setup/ - Test environment configuration
+    </locations>
+    <ideas>
+      <test ac="1">Verify create pet form displays all required fields: name, species dropdown, breed, birth date, photo upload, submit/cancel buttons</test>
+      <test ac="2">Verify species dropdown shows 5 options (dog, cat, bird, rabbit, other) with lucide-react icons displayed</test>
+      <test ac="3">Verify photo upload accepts JPG, PNG, HEIC files up to 5MB and rejects files >5MB with error message</test>
+      <test ac="3">Verify photo upload rejects unsupported file types (PDF, GIF) with clear error message</test>
+      <test ac="4">Verify form validation shows error for missing name field</test>
+      <test ac="4">Verify form validation shows error for missing species field</test>
+      <test ac="5">Verify successful pet creation shows success toast notification</test>
+      <test ac="5">Verify successful pet creation navigates to pet detail page /pets/{petId}</test>
+      <test ac="6">Verify free tier user can create 1st pet successfully</test>
+      <test ac="6">Verify free tier user attempting to create 2nd pet sees UpgradePromptDialog with message "Free plan allows 1 pet"</test>
+      <test ac="6">Verify upgrade dialog has "Upgrade to Premium" button linking to /pricing page</test>
+      <test ac="7">Verify photo compression reduces file size by 50-70% before upload (check network request size vs original file size)</test>
+      <test ac="all">Verify created pet data persists in database and displays correctly on pet detail page</test>
+      <test ac="all">Verify RLS policies prevent users from accessing other users' pets (attempt to fetch pet by ID owned by different user)</test>
+    </ideas>
+  </tests>
+</story-context>

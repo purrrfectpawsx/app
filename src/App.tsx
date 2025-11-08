@@ -9,6 +9,8 @@ import { EmailVerifiedPage } from '@/pages/EmailVerifiedPage'
 import { AuthCallback } from '@/pages/AuthCallback'
 import { ForgotPassword } from '@/pages/ForgotPassword'
 import { ResetPassword } from '@/pages/ResetPassword'
+import { PetDetailPage } from '@/pages/PetDetailPage'
+import { PetsPage } from '@/pages/PetsPage'
 import { VerifiedRoute } from '@/components/auth/VerifiedRoute'
 import { PublicRoute } from '@/components/auth/PublicRoute'
 
@@ -35,19 +37,8 @@ function App() {
 
           {/* Protected routes (require authentication + email verification) */}
           <Route element={<VerifiedRoute />}>
-            <Route
-              path="/dashboard"
-              element={
-                <div className="min-h-screen flex items-center justify-center">
-                  <div className="text-center space-y-4">
-                    <h1 className="text-3xl font-bold">Dashboard</h1>
-                    <p className="text-muted-foreground">
-                      Welcome to PetCare! Dashboard to be implemented in future stories.
-                    </p>
-                  </div>
-                </div>
-              }
-            />
+            <Route path="/dashboard" element={<PetsPage />} />
+            <Route path="/pets/:petId" element={<PetDetailPage />} />
           </Route>
         </Routes>
       </AuthProvider>
