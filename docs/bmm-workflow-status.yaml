@@ -35,14 +35,14 @@ workflow_status:
   product-brief: docs/product-brief-PetLog MVP-2025-11-03.md
 
   # Phase 2: Planning
-  prd: required
+  prd: docs/PRD.md
   validate-prd: optional
   create-design: conditional
 
   # Phase 3: Solutioning
-  create-architecture: required
+  create-architecture: docs/architecture.md
   validate-architecture: optional
-  solutioning-gate-check: recommended
+  solutioning-gate-check: docs/implementation-readiness-report-2025-11-08.md
 
   # Phase 4: Implementation
   sprint-planning: required

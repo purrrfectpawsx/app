@@ -41,9 +41,9 @@ development_status:
   1-2-email-verification-flow: done
   1-3-user-login-with-email-password: done
   1-4-google-oauth-integration: done
-  1-5-password-reset-flow: review
-  1-6-protected-routes-session-management: ready-for-dev
-  epic-1-retrospective: optional
+  1-5-password-reset-flow: done
+  1-6-protected-routes-session-management: done
+  epic-1-retrospective: completed
 
   epic-2: backlog
   2-1-create-pet-profile-with-basic-info: backlog
