@@ -1,20 +1,14 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Loader2, ArrowLeft, Dog, Cat, Bird, Rabbit, MoreHorizontal } from 'lucide-react'
-import { formatDistanceToNow, parseISO } from 'date-fns'
+import { ArrowLeft, Edit, Trash2 } from 'lucide-react'
 
 import { usePets } from '@/hooks/usePets'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { PetInfoCard } from '@/components/pets/PetInfoCard'
+import { PetStats } from '@/components/pets/PetStats'
 import type { Pet } from '@/schemas/pets'
-
-const speciesIcons = {
-  dog: Dog,
-  cat: Cat,
-  bird: Bird,
-  rabbit: Rabbit,
-  other: MoreHorizontal,
-}
 
 export function PetDetailPage() {
   const { petId } = useParams<{ petId: string }>()
@@ -46,35 +40,56 @@ export function PetDetailPage() {
     fetchPet()
   }, [petId, getPetById])
 
-  const calculateAge = (birthDate: string | null | undefined) => {
-    if (!birthDate) return null
-    try {
-      const age = formatDistanceToNow(parseISO(birthDate), { addSuffix: false })
-      return age
-    } catch {
-      return null
-    }
-  }
-
   const handleBack = () => {
-    navigate('/dashboard')
+    navigate('/pets')
   }
 
+  const handleEdit = () => {
+    // TODO: Implement in Story 2.4
+    console.log('Edit functionality coming in Story 2.4')
+  }
+
+  const handleDelete = () => {
+    // TODO: Implement in Story 2.5
+    console.log('Delete functionality coming in Story 2.5')
+  }
+
+  // Loading skeleton
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto text-gray-400" />
-          <p className="text-sm text-gray-500">Loading pet details...</p>
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-4xl mx-auto p-6 space-y-6">
+          {/* Header skeleton */}
+          <div className="flex items-center gap-4">
+            <Skeleton className="h-10 w-10 rounded-md" />
+            <div className="space-y-2">
+              <Skeleton className="h-8 w-48" />
+              <Skeleton className="h-4 w-32" />
+            </div>
+          </div>
+
+          {/* Stats skeleton */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-32 rounded-lg" />
+            ))}
+          </div>
+
+          {/* Info card skeleton */}
+          <Skeleton className="h-96 rounded-lg" />
+
+          {/* Tabs skeleton */}
+          <Skeleton className="h-64 rounded-lg" />
         </div>
       </div>
     )
   }
 
+  // Error state
   if (error || !pet) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center space-y-4">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center space-y-4 p-6">
           <h2 className="text-2xl font-bold text-gray-800">
             {error || 'Pet not found'}
           </h2>
@@ -83,172 +98,91 @@ export function PetDetailPage() {
           </p>
           <Button onClick={handleBack}>
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Dashboard
+            Back to Pets
           </Button>
         </div>
       </div>
     )
   }
 
-  const SpeciesIcon = speciesIcons[pet.species] || MoreHorizontal
-  const age = calculateAge(pet.birth_date)
-
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto p-6 space-y-6">
-        {/* Header */}
-        <div className="flex items-center gap-4">
-          <Button variant="outline" size="icon" onClick={handleBack}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">{pet.name}</h1>
-            <div className="flex items-center gap-2 text-gray-600 mt-1">
-              <SpeciesIcon className="w-4 h-4" />
-              <span className="capitalize">{pet.species}</span>
-              {pet.breed && <span>• {pet.breed}</span>}
+        {/* Header with Back and Action Buttons */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button variant="outline" size="icon" onClick={handleBack}>
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">{pet.name}</h1>
+              <p className="text-gray-600 mt-1 capitalize">
+                {pet.species}
+                {pet.breed && ` • ${pet.breed}`}
+              </p>
             </div>
+          </div>
+
+          {/* Edit and Delete buttons */}
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={handleEdit}>
+              <Edit className="mr-2 h-4 w-4" />
+              Edit
+            </Button>
+            <Button variant="destructive" size="sm" onClick={handleDelete}>
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete
+            </Button>
           </div>
         </div>
 
-        {/* Basic Information Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Basic Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Pet Photo */}
-              {pet.photo_url && (
-                <div className="md:col-span-2">
-                  <img
-                    src={pet.photo_url}
-                    alt={pet.name}
-                    className="w-48 h-48 object-cover rounded-lg border-2 border-gray-200"
-                  />
-                </div>
-              )}
+        {/* Quick Stats */}
+        <PetStats petId={pet.id} />
 
-              {/* Name */}
-              <div>
-                <p className="text-sm font-medium text-gray-500">Name</p>
-                <p className="text-base text-gray-900">{pet.name}</p>
-              </div>
+        {/* Pet Information Card */}
+        <PetInfoCard pet={pet} />
 
-              {/* Species */}
-              <div>
-                <p className="text-sm font-medium text-gray-500">Species</p>
-                <div className="flex items-center gap-2">
-                  <SpeciesIcon className="w-4 h-4 text-gray-700" />
-                  <p className="text-base text-gray-900 capitalize">{pet.species}</p>
-                </div>
-              </div>
+        {/* Tabs Navigation */}
+        <Tabs defaultValue="health" className="w-full">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="health">Health</TabsTrigger>
+            <TabsTrigger value="expenses">Expenses</TabsTrigger>
+            <TabsTrigger value="reminders">Reminders</TabsTrigger>
+            <TabsTrigger value="documents">Documents</TabsTrigger>
+          </TabsList>
 
-              {/* Breed */}
-              {pet.breed && (
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Breed</p>
-                  <p className="text-base text-gray-900">{pet.breed}</p>
-                </div>
-              )}
-
-              {/* Birth Date & Age */}
-              {pet.birth_date && (
-                <>
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Birth Date</p>
-                    <p className="text-base text-gray-900">
-                      {new Date(pet.birth_date).toLocaleDateString()}
-                    </p>
-                  </div>
-                  {age && (
-                    <div>
-                      <p className="text-sm font-medium text-gray-500">Age</p>
-                      <p className="text-base text-gray-900">{age}</p>
-                    </div>
-                  )}
-                </>
-              )}
-
-              {/* Gender */}
-              {pet.gender && (
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Gender</p>
-                  <p className="text-base text-gray-900 capitalize">{pet.gender}</p>
-                </div>
-              )}
-
-              {/* Spayed/Neutered */}
-              <div>
-                <p className="text-sm font-medium text-gray-500">Spayed/Neutered</p>
-                <p className="text-base text-gray-900">
-                  {pet.spayed_neutered ? 'Yes' : 'No'}
-                </p>
-              </div>
-
-              {/* Microchip */}
-              {pet.microchip && (
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Microchip</p>
-                  <p className="text-base text-gray-900">{pet.microchip}</p>
-                </div>
-              )}
-
-              {/* Notes */}
-              {pet.notes && (
-                <div className="md:col-span-2">
-                  <p className="text-sm font-medium text-gray-500">Notes</p>
-                  <p className="text-base text-gray-900">{pet.notes}</p>
-                </div>
-              )}
+          <TabsContent value="health" className="mt-6">
+            <div className="bg-white rounded-lg border p-6 text-center">
+              <p className="text-gray-500">
+                Health records will be available in Epic 3.
+              </p>
             </div>
-          </CardContent>
-        </Card>
+          </TabsContent>
 
-        {/* Placeholder sections for future stories */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Health Records</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-gray-500">
-              Health records will be available in a future update.
-            </p>
-          </CardContent>
-        </Card>
+          <TabsContent value="expenses" className="mt-6">
+            <div className="bg-white rounded-lg border p-6 text-center">
+              <p className="text-gray-500">
+                Expense tracking will be available in Epic 4.
+              </p>
+            </div>
+          </TabsContent>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Expenses</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-gray-500">
-              Expense tracking will be available in a future update.
-            </p>
-          </CardContent>
-        </Card>
+          <TabsContent value="reminders" className="mt-6">
+            <div className="bg-white rounded-lg border p-6 text-center">
+              <p className="text-gray-500">
+                Reminders will be available in Epic 5.
+              </p>
+            </div>
+          </TabsContent>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Reminders</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-gray-500">
-              Reminders will be available in a future update.
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Documents</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-gray-500">
-              Document storage will be available in a future update.
-            </p>
-          </CardContent>
-        </Card>
+          <TabsContent value="documents" className="mt-6">
+            <div className="bg-white rounded-lg border p-6 text-center">
+              <p className="text-gray-500">
+                Document storage will be available in Epic 6.
+              </p>
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   )
