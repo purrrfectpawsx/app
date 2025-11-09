@@ -1,0 +1,350 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>2</epicId>
+    <storyId>2</storyId>
+    <title>View All Pets Grid</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-08</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/stories/2-2-view-all-pets-grid.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a user with pets</asA>
+    <iWant>to see all my pets in a visual grid</iWant>
+    <soThat>I can quickly select which pet to manage</soThat>
+    <tasks>
+      - Task 1: Create usePets custom hook for data fetching (AC: #1, #6)
+        - Create src/hooks/usePets.ts if not exists (may be created in Story 2.1)
+        - Implement fetchPets function: SELECT * FROM pets WHERE user_id = auth.uid()
+        - Add loading, error, and data states
+        - Implement automatic refetch on mount
+        - Add error handling with user-friendly messages
+        - Test: Verify query returns only current user's pets (RLS enforcement)
+
+      - Task 2: Create PetCard component (AC: #2, #3, #4, #7)
+        - Create src/components/pets/PetCard.tsx component
+        - Display pet photo with fallback placeholder, name, species, age
+        - Implement age calculation from birth_date using date-fns
+        - Optimize photo display with Supabase Storage transform API (300x300 thumbnail)
+        - Make card clickable with hover effect, navigate to /pets/:petId
+        - Style with shadcn/ui Card component
+
+      - Task 3: Create EmptyPetsState component (AC: #5)
+        - Create src/components/pets/EmptyPetsState.tsx component
+        - Display friendly message and "Add Your First Pet" CTA button
+        - Button opens CreatePetForm dialog from Story 2.1
+        - Add decorative pet icon from lucide-react
+
+      - Task 4: Create PetsGrid page component (AC: #1, #6)
+        - Create src/pages/PetsGrid.tsx page component
+        - Use usePets hook to fetch pets data
+        - Implement loading state with skeleton cards (shadcn/ui Skeleton)
+        - Render pet cards in responsive grid (1/2/3 columns)
+        - Add page header with pet count and "Add Pet" button
+
+      - Task 5: Implement age calculation utility (AC: #2)
+        - Create src/lib/dateUtils.ts with calculatePetAge function
+        - Use date-fns: differenceInYears, differenceInMonths
+        - Format output: "X years", "X months", or "Unknown"
+
+      - Task 6: Add routing for pets grid page (AC: #1)
+        - Add route in App.tsx: /pets under VerifiedRoute
+        - Update Dashboard to redirect or link to /pets
+
+      - Task 7: Optimize photo loading for grid thumbnails (AC: #7)
+        - Use Supabase Storage image transformation (width=300, height=300)
+        - Add lazy loading attribute to images
+
+      - Task 8: Handle loading and error states (AC: #6)
+        - Implement loading skeleton with placeholder cards
+        - Implement error state UI with retry button
+
+      - Task 9: Testing and edge cases (All ACs)
+        - Comprehensive manual testing covering all acceptance criteria
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    1. Dashboard shows pet cards in responsive grid (1 column mobile, 2-3 columns desktop)
+    2. Each card displays: pet photo (or placeholder), name, species, age (calculated from birth date)
+    3. Cards show visual indicators: red badge for overdue vaccines (if any exist)
+    4. Tapping card navigates to pet detail page
+    5. Empty state shows "Add your first pet" with prominent CTA button
+    6. Grid loads in <2 seconds
+    7. Pet photos optimized for card size (thumbnail resolution)
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>Epic 2: Pet Profile Management</title>
+        <section>Story 2.2: View All Pets Grid</section>
+        <snippet>Pets grid shows all user pets in responsive layout (1/2/3 columns). Components: PetsGrid.tsx, PetCard.tsx, EmptyPetsState.tsx. Supabase query fetches all pets for current user. Age calculation using date-fns. Responsive grid with Tailwind CSS breakpoints. Route: /pets (dashboard).</snippet>
+      </doc>
+      <doc>
+        <path>docs/stories/2-1-create-pet-profile-with-basic-info.md</path>
+        <title>Story 2.1: Create Pet Profile with Basic Info</title>
+        <section>Database Schema</section>
+        <snippet>Pets table schema: id (uuid), user_id (FK to profiles), name, species, breed, birth_date, photo_url, gender, spayed_neutered, microchip, notes, created_at. RLS policies enforce user_id = auth.uid() for all operations. Supabase Storage bucket: pets-photos with RLS policies.</snippet>
+      </doc>
+      <doc>
+        <path>docs/stories/2-1-create-pet-profile-with-basic-info.md</path>
+        <title>Story 2.1: Create Pet Profile with Basic Info</title>
+        <section>Component Structure</section>
+        <snippet>Components organized in src/components/pets/ directory. CreatePetForm and PetPhotoUpload created in Story 2.1. PetDetailPage route at /pets/:petId. Custom hooks in src/hooks/ directory. usePets hook may be created in Story 2.1 for pet creation logic.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Backend Services - Supabase Storage</section>
+        <snippet>Supabase Storage provides image transformations (resize, optimize) via transform API. Can specify width, height, and resize mode (cover/contain) in getPublicUrl call. CDN for fast delivery. Supports lazy loading for performance optimization.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document</title>
+        <section>Frontend ↔ Supabase</section>
+        <snippet>All queries include JWT automatically for RLS enforcement. Data queries follow pattern: supabase.from('table').select('*').eq('user_id', userId). RLS policies ensure users only access their own data.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/contexts/AuthContext.tsx</path>
+        <kind>context</kind>
+        <symbol>AuthContext, useAuth</symbol>
+        <lines>1-80</lines>
+        <reason>Provides authenticated user state required for fetching user's pets. usePets hook will need user.id from AuthContext to query pets WHERE user_id = auth.uid().</reason>
+      </artifact>
+      <artifact>
+        <path>src/lib/supabase.ts</path>
+        <kind>client</kind>
+        <symbol>supabase</symbol>
+        <lines>1-43</lines>
+        <reason>Configured Supabase client for database queries and storage access. usePets hook will use this client to fetch pets data and access photo URLs with image transformations.</reason>
+      </artifact>
+      <artifact>
+        <path>src/components/auth/VerifiedRoute.tsx</path>
+        <kind>component</kind>
+        <symbol>VerifiedRoute</symbol>
+        <lines>N/A</lines>
+        <reason>HOC wrapper for /pets route to ensure only authenticated and verified users can access the pets grid page.</reason>
+      </artifact>
+      <artifact>
+        <path>src/App.tsx</path>
+        <kind>routing</kind>
+        <symbol>App</symbol>
+        <lines>1-59</lines>
+        <reason>Routing structure where /pets route will be added under VerifiedRoute element. Currently has /dashboard placeholder that should redirect to /pets.</reason>
+      </artifact>
+      <artifact>
+        <path>src/components/ui/card.tsx</path>
+        <kind>ui-component</kind>
+        <symbol>Card, CardHeader, CardContent, CardFooter</symbol>
+        <lines>N/A</lines>
+        <reason>shadcn/ui Card component for PetCard styling. Provides consistent card layout with header, content, and footer sections.</reason>
+      </artifact>
+      <artifact>
+        <path>src/components/ui/button.tsx</path>
+        <kind>ui-component</kind>
+        <symbol>Button</symbol>
+        <lines>N/A</lines>
+        <reason>shadcn/ui Button component for "Add Pet" button in grid header and CTA in EmptyPetsState.</reason>
+      </artifact>
+      <artifact>
+        <path>src/lib/utils.ts</path>
+        <kind>utility</kind>
+        <symbol>cn</symbol>
+        <lines>N/A</lines>
+        <reason>Utility function for conditional classNames, useful for dynamic styling in PetCard hover effects and responsive grid layouts.</reason>
+      </artifact>
+      <artifact>
+        <path>src/components/pets/CreatePetForm.tsx</path>
+        <kind>component</kind>
+        <symbol>CreatePetForm</symbol>
+        <lines>N/A - created in Story 2.1</lines>
+        <reason>Form component created in Story 2.1 that will be opened from EmptyPetsState CTA button and "Add Pet" button in grid header. Reuse existing component rather than recreating.</reason>
+      </artifact>
+      <artifact>
+        <path>src/pages/PetDetailPage.tsx</path>
+        <kind>component</kind>
+        <symbol>PetDetailPage</symbol>
+        <lines>N/A - created in Story 2.1</lines>
+        <reason>Pet detail page created in Story 2.1 at route /pets/:petId. PetCard will navigate to this page when clicked. Ensure route exists before implementing navigation.</reason>
+      </artifact>
+      <artifact>
+        <path>src/hooks/usePets.ts</path>
+        <kind>hook</kind>
+        <symbol>usePets, createPet</symbol>
+        <lines>N/A - may be created in Story 2.1</lines>
+        <reason>Custom hook possibly created in Story 2.1 for pet creation logic. If exists, extend with fetchPets function for querying all user pets. If not exists, create new hook with both fetchPets and refetch capabilities.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <framework name="React" version="18.2.0" />
+      <framework name="TypeScript" version="5.2.2" />
+      <framework name="Vite" version="5.0.0" />
+      <package name="@supabase/supabase-js" version="2.38.0" purpose="Database queries and storage image transformations" />
+      <package name="react-router-dom" version="6.20.0" purpose="Navigation to pet detail pages" />
+      <package name="lucide-react" version="0.294.0" purpose="Icons for empty state (Dog, Cat) and species indicators" />
+      <package name="tailwindcss" version="3.3.0" purpose="Responsive grid layout with breakpoints" />
+      <package name="@radix-ui/react-slot" version="1.0.2" purpose="shadcn/ui Card component primitive" />
+      <package name="class-variance-authority" version="0.7.0" purpose="CSS variant utilities for Card component" />
+      <package name="clsx" version="2.0.0" purpose="Conditional classNames utility" />
+      <package name="tailwind-merge" version="2.1.0" purpose="Tailwind class merging for cn() utility" />
+      <note>MISSING: date-fns library needs to be installed for age calculation (differenceInYears, differenceInMonths)</note>
+      <note>POTENTIALLY MISSING: @radix-ui/react-skeleton if shadcn/ui Skeleton component not yet installed</note>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    - Use existing usePets hook from Story 2.1 if available, extend with fetchPets function
+    - Reuse CreatePetForm component from Story 2.1 for "Add Pet" button actions
+    - All database queries must use Supabase RLS policies (user_id = auth.uid())
+    - Photos must be optimized using Supabase Storage transform API (width=300, height=300 for thumbnails)
+    - Age calculation must handle null/undefined birth_date gracefully (show "Unknown")
+    - Empty state CTA must open existing CreatePetForm dialog from Story 2.1
+    - Grid must use Tailwind responsive breakpoints: grid-cols-1 sm:grid-cols-2 lg:grid-cols-3
+    - Pet cards must be clickable and navigate to /pets/:petId route from Story 2.1
+    - Loading skeleton must show during data fetch to prevent layout shift
+    - Error states must provide retry functionality with user-friendly messages
+    - Performance: Grid must load in <2 seconds (optimize with thumbnails and lazy loading)
+    - TypeScript strict mode: no any types, proper type definitions for Pet interface
+    - Use shadcn/ui Card component for consistent styling with existing components
+    - Use VerifiedRoute wrapper for /pets route (requires auth + email verification)
+    - Vaccine badge indicator should be hidden/placeholder for now (implement in Health epic)
+    - Photo placeholders should use species-specific icons from lucide-react
+    - Navigation uses React Router navigate() or Link component, not window.location
+  </constraints>
+
+  <interfaces>
+    <interface>
+      <name>Supabase Query API for Pets</name>
+      <kind>Database API</kind>
+      <signature>
+        // Fetch all pets for current user
+        const { data: pets, error } = await supabase
+          .from('pets')
+          .select('id, name, species, birth_date, photo_url, created_at')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+      </signature>
+      <path>src/lib/supabase.ts</path>
+    </interface>
+    <interface>
+      <name>Supabase Storage Image Transformation API</name>
+      <kind>Storage API</kind>
+      <signature>
+        // Get thumbnail URL with image transformation
+        const { data } = supabase.storage
+          .from('pets-photos')
+          .getPublicUrl(path, {
+            transform: {
+              width: 300,
+              height: 300,
+              resize: 'cover'
+            }
+          })
+
+        // Or append query params to existing URL
+        const thumbnailUrl = `${photoUrl}?width=300&height=300`
+      </signature>
+      <path>src/lib/supabase.ts</path>
+    </interface>
+    <interface>
+      <name>Pet Data Type</name>
+      <kind>TypeScript Interface</kind>
+      <signature>
+        interface Pet {
+          id: string
+          name: string
+          species: 'dog' | 'cat' | 'bird' | 'rabbit' | 'other'
+          birth_date: string | null
+          photo_url: string | null
+          created_at: string
+          // Additional fields from pets table as needed
+        }
+      </signature>
+      <path>src/types/pet.types.ts or inline in components</path>
+    </interface>
+    <interface>
+      <name>usePets Hook Interface</name>
+      <kind>Custom Hook</kind>
+      <signature>
+        interface UsePetsReturn {
+          pets: Pet[] | null
+          loading: boolean
+          error: Error | null
+          fetchPets: () => Promise<void>
+          refetch: () => Promise<void>
+          createPet: (petData: PetFormData) => Promise<Pet> // May exist from Story 2.1
+        }
+
+        const usePets = (): UsePetsReturn => { ... }
+      </signature>
+      <path>src/hooks/usePets.ts</path>
+    </interface>
+    <interface>
+      <name>Age Calculation Utility</name>
+      <kind>Utility Function</kind>
+      <signature>
+        import { differenceInYears, differenceInMonths } from 'date-fns'
+
+        export function calculatePetAge(birthDate: string | Date | null): string {
+          if (!birthDate) return 'Unknown'
+
+          const birth = typeof birthDate === 'string' ? new Date(birthDate) : birthDate
+          const now = new Date()
+          const years = differenceInYears(now, birth)
+
+          if (years >= 1) {
+            return `${years} ${years === 1 ? 'year' : 'years'}`
+          }
+
+          const months = differenceInMonths(now, birth)
+          return `${months} ${months === 1 ? 'month' : 'months'}`
+        }
+      </signature>
+      <path>src/lib/dateUtils.ts</path>
+    </interface>
+  </interfaces>
+
+  <tests>
+    <standards>
+      Testing uses Playwright for E2E tests with smoke and mocked modes. Tests organized by story (e.g., story-2-2-pets-grid.spec.ts). Test utilities in tests/utils/ provide reusable helpers. Fixtures in tests/fixtures/ provide test data. Tests follow pattern: describe by story, test by AC, use page.getByRole/getByText for accessibility, expect for assertions.
+    </standards>
+    <locations>
+      tests/e2e/*.spec.ts - E2E tests for stories
+      tests/e2e/*.smoke.spec.ts - Smoke tests with @smoke tag
+      tests/utils/ - Reusable test utilities
+      tests/fixtures/ - Test data fixtures (e.g., pets.ts for pet test data)
+      tests/setup/ - Test environment configuration
+    </locations>
+    <ideas>
+      <test ac="1">Verify /pets page displays responsive grid layout (1 column mobile, 2-3 desktop)</test>
+      <test ac="1">Verify grid adapts to screen size changes (test viewport resize)</test>
+      <test ac="2">Verify pet card displays name, species, and calculated age correctly</test>
+      <test ac="2">Verify pet card shows photo thumbnail (not full resolution)</test>
+      <test ac="2">Verify pet without photo shows species-specific placeholder icon</test>
+      <test ac="2">Verify age displayed as "X years" for pets >= 1 year old</test>
+      <test ac="2">Verify age displayed as "X months" for pets < 1 year old</test>
+      <test ac="2">Verify "Unknown" displayed when pet has no birth_date</test>
+      <test ac="3">Verify overdue vaccine badge is hidden (placeholder for Health epic)</test>
+      <test ac="4">Verify clicking pet card navigates to /pets/:petId</test>
+      <test ac="4">Verify card has hover effect (shadow increases on hover)</test>
+      <test ac="5">Verify empty state displays when user has 0 pets</test>
+      <test ac="5">Verify empty state shows "You haven't added any pets yet" message</test>
+      <test ac="5">Verify "Add Your First Pet" CTA button is visible and clickable</test>
+      <test ac="5">Verify CTA button opens CreatePetForm dialog from Story 2.1</test>
+      <test ac="6">Verify grid loads in <2 seconds (measure page load time)</test>
+      <test ac="6">Verify loading skeleton displays during initial data fetch</test>
+      <test ac="6">Verify error state displays if fetch fails, with retry button</test>
+      <test ac="7">Verify pet photos loaded as thumbnails (check network: ~20-50KB, not MB)</test>
+      <test ac="7">Verify images use lazy loading attribute</test>
+      <test ac="all">Verify grid displays correctly with 1, 2, 3, and 10+ pets</test>
+      <test ac="all">Verify RLS policies: cannot see other users' pets</test>
+      <test ac="all">Verify page header shows "My Pets" with correct pet count</test>
+      <test ac="all">Verify "Add Pet" button in header opens CreatePetForm dialog</test>
+    </ideas>
+  </tests>
+</story-context>

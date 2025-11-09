@@ -66,8 +66,8 @@ export async function login(page: Page, credentials: LoginCredentials): Promise<
   // Submit form
   await page.getByRole('button', { name: /sign in/i }).click();
 
-  // Wait for redirect to dashboard
-  await expect(page).toHaveURL(/\/dashboard/);
+  // Wait for redirect to pets page (dashboard redirects to /pets)
+  await expect(page).toHaveURL(/\/(dashboard|pets)/);
 }
 
 /**
@@ -124,13 +124,13 @@ export async function expectLoginPage(page: Page): Promise<void> {
 }
 
 /**
- * Assert user is on dashboard page
+ * Assert user is on dashboard/pets page
  *
  * @param page - Playwright page object
  */
 export async function expectDashboardPage(page: Page): Promise<void> {
-  await expect(page).toHaveURL(/\/dashboard/);
-  await expect(page.getByRole('heading', { name: /dashboard/i })).toBeVisible();
+  await expect(page).toHaveURL(/\/(dashboard|pets)/);
+  await expect(page.getByRole('heading', { name: /(dashboard|my pets)/i })).toBeVisible();
 }
 
 /**

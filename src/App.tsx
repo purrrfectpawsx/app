@@ -10,7 +10,7 @@ import { AuthCallback } from '@/pages/AuthCallback'
 import { ForgotPassword } from '@/pages/ForgotPassword'
 import { ResetPassword } from '@/pages/ResetPassword'
 import { PetDetailPage } from '@/pages/PetDetailPage'
-import { PetsPage } from '@/pages/PetsPage'
+import { PetsGrid } from '@/pages/PetsGrid'
 import { VerifiedRoute } from '@/components/auth/VerifiedRoute'
 import { PublicRoute } from '@/components/auth/PublicRoute'
 
@@ -37,7 +37,8 @@ function App() {
 
           {/* Protected routes (require authentication + email verification) */}
           <Route element={<VerifiedRoute />}>
-            <Route path="/dashboard" element={<PetsPage />} />
+            <Route path="/dashboard" element={<Navigate to="/pets" replace />} />
+            <Route path="/pets" element={<PetsGrid />} />
             <Route path="/pets/:petId" element={<PetDetailPage />} />
           </Route>
         </Routes>

@@ -47,7 +47,7 @@ development_status:
 
   epic-2: backlog
   2-1-create-pet-profile-with-basic-info: done
-  2-2-view-all-pets-grid: ready-for-dev
+  2-2-view-all-pets-grid: done
   2-3-pet-detail-page-with-full-info: drafted
   2-4-edit-pet-profile: drafted
   2-5-delete-pet-with-confirmation: drafted
