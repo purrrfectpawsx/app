@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { Plus } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 
 import { usePets } from '@/hooks/usePets'
 import { Button } from '@/components/ui/button'
@@ -20,6 +21,7 @@ export function PetsGrid() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const { getAllPets, isLoading } = usePets()
+  const navigate = useNavigate()
 
   const fetchPets = useCallback(async () => {
     try {
@@ -40,10 +42,12 @@ export function PetsGrid() {
     setIsDialogOpen(true)
   }
 
-  const handlePetCreated = () => {
-    setIsDialogOpen(false)
+  const handlePetCreated = (petId: string) => {
     // Refresh pets list
     fetchPets()
+    // Navigate without closing dialog - success message displays for 2s in CreatePetForm
+    // Dialog will unmount naturally when navigation occurs
+    navigate(`/pets/${petId}`)
   }
 
   // Loading state with skeleton cards

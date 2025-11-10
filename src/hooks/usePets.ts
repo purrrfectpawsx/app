@@ -208,10 +208,139 @@ export function usePets() {
     }
   }, [user])
 
+  const updatePet = useCallback(
+    async (
+      petId: string,
+      formData: PetFormData,
+      existingPhotoUrl: string | null
+    ): Promise<Pet> => {
+      if (!user) {
+        throw new Error('You must be logged in to update a pet')
+      }
+
+      setIsLoading(true)
+      setError(null)
+
+      try {
+        let photoUrl: string | null = existingPhotoUrl
+
+        // Handle photo changes
+        if (formData.photo) {
+          // User is uploading a new photo
+          try {
+            // Step 1: Delete old photo from storage if exists
+            if (existingPhotoUrl) {
+              const pathMatch = existingPhotoUrl.match(/\/pets-photos\/(.+)$/)
+              if (pathMatch) {
+                const oldPhotoPath = pathMatch[1]
+                const { error: deleteError } = await supabase.storage
+                  .from('pets-photos')
+                  .remove([oldPhotoPath])
+
+                if (deleteError) {
+                  console.error('Failed to delete old photo:', deleteError)
+                  // Continue anyway - non-blocking
+                }
+              }
+            }
+
+            // Step 2: Compress and upload new photo
+            const options = {
+              maxSizeMB: 1,
+              maxWidthOrHeight: 1024,
+              useWebWorker: true,
+              fileType: 'image/jpeg',
+              initialQuality: 0.8,
+            }
+
+            const compressedFile = await imageCompression(formData.photo, options)
+
+            // Generate unique filename
+            const fileExt = 'jpg'
+            const fileName = `${user.id}/${crypto.randomUUID()}.${fileExt}`
+
+            // Upload to Supabase Storage
+            const { error: uploadError } = await supabase.storage
+              .from('pets-photos')
+              .upload(fileName, compressedFile, {
+                contentType: 'image/jpeg',
+                upsert: false,
+              })
+
+            if (uploadError) {
+              console.error('Upload error:', uploadError)
+              throw new Error('Failed to upload new photo')
+            }
+
+            // Get public URL
+            const { data: urlData } = supabase.storage
+              .from('pets-photos')
+              .getPublicUrl(fileName)
+
+            photoUrl = urlData.publicUrl
+          } catch (uploadErr) {
+            console.error('Photo upload error:', uploadErr)
+            throw new Error('Failed to update photo. Please try again.')
+          }
+        } else if (formData.photo === null && existingPhotoUrl) {
+          // User is explicitly removing the photo
+          const pathMatch = existingPhotoUrl.match(/\/pets-photos\/(.+)$/)
+          if (pathMatch) {
+            const oldPhotoPath = pathMatch[1]
+            const { error: deleteError } = await supabase.storage
+              .from('pets-photos')
+              .remove([oldPhotoPath])
+
+            if (deleteError) {
+              console.error('Failed to delete photo:', deleteError)
+              // Continue anyway
+            }
+          }
+          photoUrl = null
+        }
+
+        // Step 3: Update pet record in database
+        const { data: pet, error: updateError } = await supabase
+          .from('pets')
+          .update({
+            name: formData.name,
+            species: formData.species,
+            breed: formData.breed || null,
+            birth_date: formData.birth_date?.toISOString().split('T')[0] || null,
+            photo_url: photoUrl,
+            gender: formData.gender || null,
+            spayed_neutered: formData.spayed_neutered,
+            microchip: formData.microchip || null,
+            notes: formData.notes || null,
+          })
+          .eq('id', petId)
+          .eq('user_id', user.id) // RLS enforcement
+          .select()
+          .single()
+
+        if (updateError) {
+          console.error('Update error:', updateError)
+          throw new Error('Failed to update pet. Please try again.')
+        }
+
+        return pet
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : 'An unexpected error occurred'
+        setError(errorMessage)
+        throw err
+      } finally {
+        setIsLoading(false)
+      }
+    },
+    [user]
+  )
+
   return {
     createPet,
     getPetById,
     getAllPets,
+    updatePet,
     isLoading,
     error,
   }

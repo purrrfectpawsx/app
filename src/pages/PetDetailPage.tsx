@@ -6,8 +6,15 @@ import { usePets } from '@/hooks/usePets'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { PetInfoCard } from '@/components/pets/PetInfoCard'
 import { PetStats } from '@/components/pets/PetStats'
+import { CreatePetForm } from '@/components/pets/CreatePetForm'
 import type { Pet } from '@/schemas/pets'
 
 export function PetDetailPage() {
@@ -16,27 +23,28 @@ export function PetDetailPage() {
   const { getPetById, isLoading } = usePets()
   const [pet, setPet] = useState<Pet | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
 
-  useEffect(() => {
-    const fetchPet = async () => {
-      if (!petId) {
-        setError('Pet ID is required')
-        return
-      }
-
-      try {
-        const fetchedPet = await getPetById(petId)
-        if (!fetchedPet) {
-          setError('Pet not found')
-        } else {
-          setPet(fetchedPet)
-        }
-      } catch (err) {
-        console.error('Error fetching pet:', err)
-        setError('Failed to load pet details')
-      }
+  const fetchPet = async () => {
+    if (!petId) {
+      setError('Pet ID is required')
+      return
     }
 
+    try {
+      const fetchedPet = await getPetById(petId)
+      if (!fetchedPet) {
+        setError('Pet not found')
+      } else {
+        setPet(fetchedPet)
+      }
+    } catch (err) {
+      console.error('Error fetching pet:', err)
+      setError('Failed to load pet details')
+    }
+  }
+
+  useEffect(() => {
     fetchPet()
   }, [petId, getPetById])
 
@@ -45,8 +53,13 @@ export function PetDetailPage() {
   }
 
   const handleEdit = () => {
-    // TODO: Implement in Story 2.4
-    console.log('Edit functionality coming in Story 2.4')
+    setEditDialogOpen(true)
+  }
+
+  const handleEditSuccess = async () => {
+    setEditDialogOpen(false)
+    // Refetch pet data to show updates
+    await fetchPet()
   }
 
   const handleDelete = () => {
@@ -183,6 +196,21 @@ export function PetDetailPage() {
             </div>
           </TabsContent>
         </Tabs>
+
+        {/* Edit Pet Dialog */}
+        <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Edit {pet.name}'s Profile</DialogTitle>
+            </DialogHeader>
+            <CreatePetForm
+              mode="edit"
+              initialData={pet}
+              onSuccess={handleEditSuccess}
+              onCancel={() => setEditDialogOpen(false)}
+            />
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   )

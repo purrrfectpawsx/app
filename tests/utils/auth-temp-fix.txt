@@ -1,0 +1,23 @@
+export async function authenticateTestUser(page: Page, credentials: SignupCredentials): Promise<void> {
+  // Navigate to signup
+  await page.goto('/signup');
+
+  // Fill and submit signup form
+  await page.getByLabel(/name/i).fill(credentials.name);
+  await page.getByLabel(/email/i).fill(credentials.email);
+  await page.getByLabel(/^password$/i).fill(credentials.password);
+  await page.getByLabel(/confirm password/i).fill(credentials.password);
+  await page.getByRole('button', { name: /create account/i }).click();
+
+  // Wait for signup to complete
+  await page.waitForLoadState('load', { timeout: 15000 });
+
+  // Wait a moment for auth state to propagate
+  await page.waitForTimeout(1500);
+
+  // Force navigation to /pets (in mocked tests, user should be auto-verified)
+  await page.goto('/pets', { waitUntil: 'networkidle', timeout: 15000 });
+
+  // Verify authentication by checking for logout button
+  await expect(page.getByRole('button', { name: /logout/i })).toBeVisible({ timeout: 10000 });
+}

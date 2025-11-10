@@ -1,7 +1,6 @@
 import { test, expect } from '../setup/test-env';
-import { login, signUp } from '../utils/auth';
+import { authenticateTestUser, generateTestEmail, generateTestPassword } from '../utils/auth';
 import { createPet, openCreatePetDialog } from '../utils/pets';
-import { generateTestUser } from '../fixtures/users';
 import { TEST_PETS, generateTestPet } from '../fixtures/pets';
 
 /**
@@ -20,9 +19,12 @@ import { TEST_PETS, generateTestPet } from '../fixtures/pets';
 test.describe('Story 2.2: View All Pets Grid', () => {
   // Setup: Create and log in a test user before each test
   test.beforeEach(async ({ page }) => {
-    const user = generateTestUser();
-    await signUp(page, user);
-    await login(page, user);
+    const credentials = {
+      name: 'Test User',
+      email: generateTestEmail(),
+      password: generateTestPassword(),
+    };
+    await authenticateTestUser(page, credentials);
   });
 
   test('AC5: Empty state displays when user has no pets', async ({ page }) => {
@@ -69,9 +71,9 @@ test.describe('Story 2.2: View All Pets Grid', () => {
     await page.goto('/pets');
     const pet = {
       name: 'Buddy',
-      species: 'dog',
+      species: 'dog' as const,
       breed: 'Golden Retriever',
-      birth_date: new Date('2020-01-15'),
+      birthDate: '2020-01-15',
     };
     await createPet(page, pet);
 
@@ -92,7 +94,7 @@ test.describe('Story 2.2: View All Pets Grid', () => {
   test('AC2: Pet card shows placeholder icon when no photo uploaded', async ({ page }) => {
     // Create a pet without photo
     await page.goto('/pets');
-    const pet = { name: 'Max', species: 'cat' };
+    const pet = { name: 'Max', species: 'cat' as const };
     await createPet(page, pet);
 
     // Navigate to grid
@@ -107,7 +109,7 @@ test.describe('Story 2.2: View All Pets Grid', () => {
   test('AC2: Pet card shows "Unknown" age when birth_date is null', async ({ page }) => {
     // Create a pet without birth date
     await page.goto('/pets');
-    const pet = { name: 'Luna', species: 'bird' };
+    const pet = { name: 'Luna', species: 'bird' as const };
     await createPet(page, pet);
 
     // Navigate to grid
@@ -120,7 +122,7 @@ test.describe('Story 2.2: View All Pets Grid', () => {
   test('AC4: Clicking pet card navigates to pet detail page', async ({ page }) => {
     // Create a pet
     await page.goto('/pets');
-    const pet = { name: 'Charlie', species: 'dog' };
+    const pet = { name: 'Charlie', species: 'dog' as const };
     await createPet(page, pet);
 
     // Navigate to grid
@@ -133,9 +135,9 @@ test.describe('Story 2.2: View All Pets Grid', () => {
     // Verify navigation to pet detail page
     await expect(page).toHaveURL(/\/pets\/[a-f0-9-]+/);
 
-    // Verify pet detail page content
-    await expect(page.getByText('Charlie')).toBeVisible();
-    await expect(page.getByText(/basic information/i)).toBeVisible();
+    // Verify pet detail page content (use heading to avoid strict mode violation)
+    await expect(page.getByRole('heading', { name: 'Charlie' })).toBeVisible();
+    await expect(page.getByText(/pet information/i)).toBeVisible();
   });
 
   test('AC1: Grid displays multiple pets in responsive layout (3 columns desktop)', async ({ page }) => {
@@ -143,9 +145,10 @@ test.describe('Story 2.2: View All Pets Grid', () => {
     await page.goto('/pets');
 
     for (let i = 1; i <= 5; i++) {
+      const species = ['dog', 'cat', 'bird', 'rabbit', 'dog'][i - 1];
       const pet = {
         name: `Pet ${i}`,
-        species: ['dog', 'cat', 'bird', 'rabbit', 'dog'][i - 1] as 'dog' | 'cat' | 'bird' | 'rabbit',
+        species: species as 'dog' | 'cat' | 'bird' | 'rabbit',
       };
       await createPet(page, pet);
 
@@ -177,9 +180,9 @@ test.describe('Story 2.2: View All Pets Grid', () => {
   test('AC1: Grid adapts to mobile viewport (1 column)', async ({ page }) => {
     // Create 2 pets
     await page.goto('/pets');
-    await createPet(page, { name: 'Pet 1', species: 'dog' });
+    await createPet(page, { name: 'Pet 1', species: 'dog' as const });
     await page.goto('/pets');
-    await createPet(page, { name: 'Pet 2', species: 'cat' });
+    await createPet(page, { name: 'Pet 2', species: 'cat' as const });
 
     // Navigate to grid
     await page.goto('/pets');
@@ -201,7 +204,7 @@ test.describe('Story 2.2: View All Pets Grid', () => {
     // Create 3 pets
     await page.goto('/pets');
     for (let i = 1; i <= 3; i++) {
-      await createPet(page, { name: `Pet ${i}`, species: 'dog' });
+      await createPet(page, { name: `Pet ${i}`, species: 'dog' as const });
       if (i < 3) {
         await page.goto('/pets');
       }
@@ -226,7 +229,7 @@ test.describe('Story 2.2: View All Pets Grid', () => {
     await page.goto('/pets');
 
     // Create a pet to ensure we have data
-    await createPet(page, { name: 'Test Pet', species: 'dog' });
+    await createPet(page, { name: 'Test Pet', species: 'dog' as const });
 
     // Reload page to see loading state
     await page.reload();
@@ -246,7 +249,7 @@ test.describe('Story 2.2: View All Pets Grid', () => {
   test('Header "Add Pet" button opens create dialog', async ({ page }) => {
     // Create a pet first so we're not in empty state
     await page.goto('/pets');
-    await createPet(page, { name: 'Existing Pet', species: 'dog' });
+    await createPet(page, { name: 'Existing Pet', species: 'dog' as const });
 
     // Navigate to grid
     await page.goto('/pets');
@@ -264,7 +267,7 @@ test.describe('Story 2.2: View All Pets Grid', () => {
   test('AC4: Pet card has hover effect', async ({ page }) => {
     // Create a pet
     await page.goto('/pets');
-    await createPet(page, { name: 'Hover Test', species: 'dog' });
+    await createPet(page, { name: 'Hover Test', species: 'dog' as const });
 
     // Navigate to grid
     await page.goto('/pets');
@@ -286,8 +289,8 @@ test.describe('Story 2.2: View All Pets Grid', () => {
     await page.goto('/pets');
     await createPet(page, {
       name: 'Puppy',
-      species: 'dog',
-      birth_date: sixMonthsAgo,
+      species: 'dog' as const,
+      birthDate: sixMonthsAgo.toISOString().split('T')[0],
     });
 
     // Navigate to grid
@@ -305,8 +308,8 @@ test.describe('Story 2.2: View All Pets Grid', () => {
     await page.goto('/pets');
     await createPet(page, {
       name: 'Adult Dog',
-      species: 'dog',
-      birth_date: twoYearsAgo,
+      species: 'dog' as const,
+      birthDate: twoYearsAgo.toISOString().split('T')[0],
     });
 
     // Navigate to grid

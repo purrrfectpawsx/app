@@ -1,0 +1,18 @@
+  // Wait for page to be ready - check for either pets heading or empty state
+  // This handles both cases: when user has pets and when they don't
+  const myPetsHeading = page.getByRole('heading', { name: /my pets/i });
+  const emptyStateHeading = page.getByRole('heading', { name: /you haven't added any pets/i });
+  
+  // Wait for either heading to appear
+  await Promise.race([
+    myPetsHeading.waitFor({ state: 'visible', timeout: 10000 }).catch(() => {}),
+    emptyStateHeading.waitFor({ state: 'visible', timeout: 10000 }).catch(() => {})
+  ]);
+  
+  // Verify at least one is visible
+  const myPetsVisible = await myPetsHeading.isVisible().catch(() => false);
+  const emptyStateVisible = await emptyStateHeading.isVisible().catch(() => false);
+  
+  if (!myPetsVisible && !emptyStateVisible) {
+    throw new Error('Neither "My Pets" heading nor empty state message found on pets page');
+  }

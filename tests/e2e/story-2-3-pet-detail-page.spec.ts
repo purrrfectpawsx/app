@@ -1,7 +1,6 @@
 import { test, expect } from '../setup/test-env';
-import { login, signUp } from '../utils/auth';
+import { authenticateTestUser, generateTestEmail, generateTestPassword } from '../utils/auth';
 import { createPet } from '../utils/pets';
-import { generateTestUser } from '../fixtures/users';
 
 /**
  * E2E Tests for Story 2.3: Pet Detail Page with Full Info
@@ -19,9 +18,12 @@ import { generateTestUser } from '../fixtures/users';
 test.describe('Story 2.3: Pet Detail Page with Full Info', () => {
   // Setup: Create and log in a test user before each test
   test.beforeEach(async ({ page }) => {
-    const user = generateTestUser();
-    await signUp(page, user);
-    await login(page, user);
+    const credentials = {
+      name: 'Test User',
+      email: generateTestEmail(),
+      password: generateTestPassword(),
+    };
+    await authenticateTestUser(page, credentials);
   });
 
   test('AC1: Pet detail page displays all pet fields with complete information', async ({ page }) => {
@@ -29,11 +31,11 @@ test.describe('Story 2.3: Pet Detail Page with Full Info', () => {
     await page.goto('/pets');
     const pet = {
       name: 'Max',
-      species: 'dog',
+      species: 'dog' as const,
       breed: 'Labrador Retriever',
-      birth_date: new Date('2020-06-15'),
-      gender: 'male',
-      spayed_neutered: true,
+      birthDate: '2020-06-15',
+      gender: 'male' as const,
+      spayedNeutered: true,
       microchip: 'MC123456789',
       notes: 'Very friendly and loves to play fetch.',
     };
@@ -43,7 +45,7 @@ test.describe('Story 2.3: Pet Detail Page with Full Info', () => {
     await expect(page).toHaveURL(/\/pets\/[a-f0-9-]+/);
 
     // Verify all fields are displayed in PetInfoCard
-    await expect(page.getByText('Max')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Max' })).toBeVisible();
     await expect(page.getByText(/dog/i)).toBeVisible();
     await expect(page.getByText('Labrador Retriever')).toBeVisible();
     await expect(page.getByText(/\d+ years?/i)).toBeVisible(); // Age calculation
@@ -61,12 +63,12 @@ test.describe('Story 2.3: Pet Detail Page with Full Info', () => {
     await page.goto('/pets');
     const pet = {
       name: 'Luna',
-      species: 'cat',
+      species: 'cat' as const,
     };
     await createPet(page, pet);
 
     // Verify required fields are displayed
-    await expect(page.getByText('Luna')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Luna' })).toBeVisible();
     await expect(page.getByText(/cat/i)).toBeVisible();
 
     // Verify optional fields are hidden gracefully (not showing empty values)
@@ -205,9 +207,9 @@ test.describe('Story 2.3: Pet Detail Page with Full Info', () => {
     await page.goto('/pets');
     const pet = {
       name: 'Performance Test Pet',
-      species: 'dog',
+      species: 'dog' as const,
       breed: 'Husky',
-      birth_date: new Date('2019-03-20'),
+      birthDate: '2019-03-20',
       notes: 'Testing page load performance',
     };
     await createPet(page, pet);
@@ -225,7 +227,7 @@ test.describe('Story 2.3: Pet Detail Page with Full Info', () => {
     await page.goto(petDetailUrl);
 
     // Wait for main content to be visible
-    await page.getByText('Performance Test Pet').waitFor({ state: 'visible' });
+    await page.getByRole('heading', { name: 'Performance Test Pet' }).waitFor({ state: 'visible' });
     await page.getByText(/pet information/i).waitFor({ state: 'visible' });
 
     const loadTime = Date.now() - startTime;
@@ -250,7 +252,7 @@ test.describe('Story 2.3: Pet Detail Page with Full Info', () => {
 
     // Loading state is very fast, so we just verify the pattern exists in the code
     // The skeleton should appear briefly before content loads
-    const hasContent = await page.getByText('Loading Test').isVisible();
+    const hasContent = await page.getByRole('heading', { name: 'Loading Test' }).isVisible();
     expect(hasContent).toBeTruthy();
   });
 
@@ -259,12 +261,12 @@ test.describe('Story 2.3: Pet Detail Page with Full Info', () => {
     await page.goto('/pets');
     const pet = {
       name: 'Minimal Pet',
-      species: 'bird',
+      species: 'bird' as const,
     };
     await createPet(page, pet);
 
     // Verify page loads successfully
-    await expect(page.getByText('Minimal Pet')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Minimal Pet' })).toBeVisible();
 
     // Get page text content
     const pageContent = await page.textContent('body');
@@ -282,7 +284,7 @@ test.describe('Story 2.3: Pet Detail Page with Full Info', () => {
     await page.goto('/pets');
     const pet = {
       name: 'Ageless Pet',
-      species: 'cat',
+      species: 'cat' as const,
     };
     await createPet(page, pet);
 
@@ -300,7 +302,7 @@ test.describe('Story 2.3: Pet Detail Page with Full Info', () => {
     await page.goto('/pets');
     const pet = {
       name: 'Photo Test',
-      species: 'dog',
+      species: 'dog' as const,
     };
     await createPet(page, pet);
 
@@ -342,8 +344,8 @@ test.describe('Story 2.3: Pet Detail Page with Full Info', () => {
     await page.goto('/pets');
     const spayedPet = {
       name: 'Spayed Cat',
-      species: 'cat',
-      spayed_neutered: true,
+      species: 'cat' as const,
+      spayedNeutered: true,
     };
     await createPet(page, spayedPet);
 
@@ -355,8 +357,8 @@ test.describe('Story 2.3: Pet Detail Page with Full Info', () => {
     await page.goto('/pets');
     const notSpayedPet = {
       name: 'Intact Dog',
-      species: 'dog',
-      spayed_neutered: false,
+      species: 'dog' as const,
+      spayedNeutered: false,
     };
     await createPet(page, notSpayedPet);
 
@@ -375,7 +377,7 @@ test.describe('Story 2.3: Pet Detail Page with Full Info', () => {
     await page.setViewportSize({ width: 375, height: 667 });
 
     // Verify content is still visible and readable
-    await expect(page.getByText('Mobile Test')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Mobile Test' })).toBeVisible();
     await expect(page.getByText(/pet information/i)).toBeVisible();
     await expect(page.getByRole('tab', { name: /health/i })).toBeVisible();
 

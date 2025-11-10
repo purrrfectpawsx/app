@@ -43,11 +43,13 @@ export function PetsPage() {
   }
 
   const handleCreateSuccess = (petId: string) => {
-    setIsCreateDialogOpen(false)
     // Reload pets list
     loadPets()
-    // Navigate to the pet detail page
-    navigate(`/pets/${petId}`)
+    // Wait 2 seconds to show success message before closing dialog and navigating
+    setTimeout(() => {
+      setIsCreateDialogOpen(false)
+      navigate(`/pets/${petId}`)
+    }, 2000)
   }
 
   const handlePetClick = (petId: string) => {

@@ -13,8 +13,30 @@ import * as fs from 'fs';
  * Navigate to pets page (dashboard)
  */
 export async function navigateToPetsPage(page: Page): Promise<void> {
-  await page.goto('/dashboard');
-  await expect(page.getByRole('heading', { name: /my pets/i })).toBeVisible();
+  // Navigate to pets page if not already there
+  const currentUrl = page.url();
+  // Navigate to /pets if we're not already on the pets list page
+  // (don't navigate if we're on a pet detail page like /pets/{id})
+  if (!currentUrl.match(/\/pets\/?$/)) {
+    await page.goto('/pets');
+  }
+
+  // Wait for page to load
+  await page.waitForLoadState('domcontentloaded', { timeout: 10000 });
+
+  // Wait for page to be ready - check for either pets heading or empty state text
+  // This handles both cases: when user has pets and when they don't
+  const myPetsHeading = page.getByRole('heading', { name: /my pets/i });
+  const emptyStateText = page.getByText(/you haven't added any pets yet/i);
+
+  // Wait for either heading or empty state text to appear
+  // Using Promise.any to ensure at least one succeeds
+  await Promise.any([
+    myPetsHeading.waitFor({ state: 'visible', timeout: 10000 }),
+    emptyStateText.waitFor({ state: 'visible', timeout: 10000 })
+  ]).catch(() => {
+    throw new Error('Neither "My Pets" heading nor empty state message found on pets page');
+  });
 }
 
 /**
@@ -22,10 +44,14 @@ export async function navigateToPetsPage(page: Page): Promise<void> {
  */
 export async function openCreatePetDialog(page: Page): Promise<void> {
   await navigateToPetsPage(page);
-  await page.getByRole('button', { name: /create pet/i }).click();
+  const createButton = page.getByRole('button', { name: /add pet|add your first pet|create pet/i });
+  await createButton.click();
 
-  // Wait for dialog to open
+  // Wait for dialog to open and form to be ready
   await expect(page.getByRole('heading', { name: /create pet profile/i })).toBeVisible();
+
+  // Wait for name field to be ready (ensures form is fully rendered)
+  await page.getByLabel(/pet name/i).waitFor({ state: 'visible', timeout: 5000 });
 }
 
 /**
@@ -58,7 +84,9 @@ export async function fillPetForm(
 
   if (pet.gender) {
     await page.getByLabel(/gender/i).click();
-    await page.getByRole('option', { name: new RegExp(pet.gender, 'i') }).click();
+    // Use exact match to avoid matching "male" in "female"
+    const genderCapitalized = pet.gender.charAt(0).toUpperCase() + pet.gender.slice(1);
+    await page.getByRole('option', { name: genderCapitalized, exact: true }).click();
   }
 
   if (pet.spayedNeutered !== undefined && pet.spayedNeutered) {
@@ -83,7 +111,11 @@ export async function fillPetForm(
  * Submit the create pet form
  */
 export async function submitPetForm(page: Page): Promise<void> {
-  await page.getByRole('button', { name: /create pet/i }).click();
+  const submitButton = page.getByRole('button', { name: /create pet/i });
+  // Wait for button to be enabled (form validation complete)
+  await submitButton.waitFor({ state: 'visible', timeout: 5000 });
+  await expect(submitButton).toBeEnabled({ timeout: 5000 });
+  await submitButton.click();
 }
 
 /**
@@ -136,7 +168,12 @@ export function createTestImage(fileName: string, sizeKB: number = 500): string 
     fs.mkdirSync(testDir, { recursive: true });
   }
 
-  const filePath = path.join(testDir, fileName);
+  // Add timestamp and random string to make filename unique across parallel tests
+  const uniqueSuffix = `${Date.now()}_${Math.random().toString(36).substring(7)}`;
+  const baseName = fileName.replace(/\.[^.]+$/, ''); // Remove extension
+  const extension = fileName.match(/\.[^.]+$/)?.[0] || '.jpg'; // Get extension
+  const uniqueFileName = `${baseName}_${uniqueSuffix}${extension}`;
+  const filePath = path.join(testDir, uniqueFileName);
 
   // Create a simple base64 test image (1x1 pixel PNG)
   const base64Image = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
@@ -146,6 +183,11 @@ export function createTestImage(fileName: string, sizeKB: number = 500): string 
   const paddedBuffer = Buffer.concat([buffer, Buffer.alloc(sizeKB * 1024)]);
 
   fs.writeFileSync(filePath, paddedBuffer);
+
+  // Verify file was created
+  if (!fs.existsSync(filePath)) {
+    throw new Error(`Failed to create test image at ${filePath}`);
+  }
 
   return filePath;
 }
@@ -228,7 +270,7 @@ export async function waitForPhotoCompression(page: Page, timeout: number = 5000
  * Verify photo preview is displayed
  */
 export async function expectPhotoPreview(page: Page): Promise<void> {
-  await expect(page.locator('img[alt*="preview" i]').or(page.locator('img[alt*="pet" i]'))).toBeVisible();
+  await expect(page.getByAltText(/preview/i)).toBeVisible();
 }
 
 /**

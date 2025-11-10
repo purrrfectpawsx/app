@@ -46,16 +46,16 @@ development_status:
   epic-1-retrospective: completed
 
   epic-2: backlog
-  2-1-create-pet-profile-with-basic-info: done
-  2-2-view-all-pets-grid: done
-  2-3-pet-detail-page-with-full-info: done
-  2-4-edit-pet-profile: done
+  2-1-create-pet-profile-with-basic-info: ready-for-dev
+  2-2-view-all-pets-grid: ready-for-dev
+  2-3-pet-detail-page-with-full-info: drafted
+  2-4-edit-pet-profile: drafted
   2-5-delete-pet-with-confirmation: drafted
   2-6-free-tier-enforcement-1-pet-limit: drafted
   epic-2-retrospective: optional
 
   epic-3: backlog
-  3-1-create-health-record-database-schema: drafted
+  3-1-create-health-record-database-schema: backlog
   3-2-create-vaccine-record: backlog
   3-3-create-medication-vet-visit-symptom-and-weight-check-records: backlog
   3-4-view-health-timeline-with-color-coding: backlog

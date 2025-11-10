@@ -196,14 +196,18 @@ export async function authenticateTestUser(page: Page, credentials: SignupCreden
   await page.getByLabel(/confirm password/i).fill(credentials.password);
   await page.getByRole('button', { name: /create account/i }).click();
 
-  // Wait for signup to complete
-  await page.waitForLoadState('load', { timeout: 15000 });
+  // Wait for any navigation (verify-email, dashboard, or pets)
+  await page.waitForURL(/(verify-email|dashboard|pets)/, { timeout: 15000 });
 
-  // Wait a moment for auth state to propagate
-  await page.waitForTimeout(1500);
+  // If not on dashboard/pets yet, navigate there
+  // In mocked tests with auto-verification, this should work immediately
+  const currentUrl = page.url();
+  if (!currentUrl.includes('/dashboard') && !currentUrl.includes('/pets')) {
+    await page.goto('/pets');
+  }
 
-  // Force navigation to /pets (in mocked tests, user should be auto-verified)
-  await page.goto('/pets', { waitUntil: 'networkidle', timeout: 15000 });
+  // Wait for page to be fully loaded and authenticated
+  await page.waitForLoadState('networkidle', { timeout: 10000 });
 
   // Verify authentication by checking for logout button
   await expect(page.getByRole('button', { name: /logout/i })).toBeVisible({ timeout: 10000 });
@@ -225,100 +229,13 @@ async function injectAuthSession(page: Page, user: any, accessToken: string, ref
         user,
       };
 
-      // Try multiple storage key formats that Supabase might use
-      const storageKeys = [
-        'supabase.auth.token', // Generic key
-        'sb-localhost-auth-token', // Localhost development
-        'sb-127.0.0.1-auth-token', // Localhost IP
-        `sb-${window.location.hostname}-auth-token`, // Hostname-based
-      ];
+      // Set session in localStorage (Supabase's default storage)
+      const storageKey = 'sb-' + window.location.hostname.split('.')[0] + '-auth-token';
+      localStorage.setItem(storageKey, JSON.stringify(session));
 
-      // Set in all possible locations to ensure it's found
-      storageKeys.forEach(key => {
-        localStorage.setItem(key, JSON.stringify(session));
-      });
-
-      // Also try sessionStorage as fallback
-      sessionStorage.setItem('supabase.auth.token', JSON.stringify(session));
+      // Also set in a generic key that Supabase might use
+      localStorage.setItem('supabase.auth.token', JSON.stringify(session));
     },
     { user, accessToken, refreshToken }
   );
-}
-
-/**
- * Create an authenticated user directly without going through signup/login flows
- *
- * This is the RECOMMENDED approach for test setup in mocked environments.
- * It bypasses the UI flows entirely and directly sets up authentication state,
- * which is much faster and more reliable than going through signup + login.
- *
- * @param page - Playwright page object
- * @param credentials - Optional user credentials (generates unique user if not provided)
- * @returns The created user object with credentials
- *
- * @example
- * ```typescript
- * test('should create a pet', async ({ page }) => {
- *   // Fast, reliable auth setup
- *   const user = await createAuthenticatedUser(page);
- *
- *   // Now you can test pet creation
- *   await openCreatePetDialog(page);
- *   // ... rest of test
- * });
- * ```
- */
-export async function createAuthenticatedUser(
-  page: Page,
-  credentials?: SignupCredentials
-): Promise<SignupCredentials & { userId: string }> {
-  // Import createMockUser from the mocks
-  const { createMockUser } = await import('../mocks/supabase');
-
-  // Generate credentials if not provided
-  const userCredentials = credentials || {
-    name: 'Test User',
-    email: generateTestEmail(),
-    password: generateTestPassword(),
-  };
-
-  // Create mock user in the database
-  const mockUser = createMockUser(userCredentials.email, userCredentials.name, true);
-
-  // Generate tokens
-  const accessToken = `mock_token_${mockUser.id}`;
-  const refreshToken = `mock_refresh_${mockUser.id}`;
-
-  // Navigate to a base page first
-  await page.goto('/');
-
-  // Use Supabase's setSession() API to properly inject the session
-  // This is the correct way - Supabase will handle storage in the right format
-  await page.evaluate(
-    async ({ user, accessToken, refreshToken }) => {
-      // Access the Supabase client from the window
-      const { supabase } = await import('/src/lib/supabase.ts');
-
-      // Use Supabase's official setSession method
-      await supabase.auth.setSession({
-        access_token: accessToken,
-        refresh_token: refreshToken,
-      });
-    },
-    { user: mockUser, accessToken, refreshToken }
-  );
-
-  // Give Supabase a moment to process the session
-  await page.waitForTimeout(1000);
-
-  // Navigate to pets page
-  await page.goto('/pets', { waitUntil: 'load', timeout: 15000 });
-
-  // Wait for auth context to initialize
-  await page.waitForTimeout(500);
-
-  return {
-    ...userCredentials,
-    userId: mockUser.id,
-  };
 }

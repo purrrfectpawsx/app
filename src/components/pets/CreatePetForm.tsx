@@ -69,15 +69,18 @@ export function CreatePetForm({ onSuccess, onCancel }: CreatePetFormProps) {
 
       setSuccessMessage('Pet created successfully!')
 
-      // Trigger success callback if provided
-      if (onSuccess) {
-        onSuccess(newPet.id)
-      } else {
-        // Default: navigate to pet detail page
-        setTimeout(() => {
-          navigate(`/pets/${newPet.id}`)
-        }, 1000)
-      }
+      // Capture pet ID for closure
+      const petId = newPet.id
+
+      // Wait 2 seconds to show success message, then trigger callback or navigate
+      setTimeout(() => {
+        if (onSuccess) {
+          onSuccess(petId)
+        } else {
+          // Default: navigate to pet detail page
+          navigate(`/pets/${petId}`)
+        }
+      }, 2000)
     } catch (err) {
       if (err instanceof FreeTierLimitError) {
         setShowUpgradePrompt(true)

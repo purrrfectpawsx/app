@@ -138,14 +138,14 @@ export const PET_ERROR_MESSAGES = {
   validation: {
     nameRequired: /pet name.*required/i,
     nameTooLong: /name.*too long/i,
-    speciesRequired: /select.*species/i,
+    speciesRequired: /please select a species/i,
     breedTooLong: /breed.*too long/i,
     birthDateFuture: /birth date.*cannot.*future/i,
     notesTooLong: /notes.*too long/i,
     microchipTooLong: /microchip.*too long/i,
   },
   photo: {
-    invalidType: /jpg.*png.*heic/i,
+    invalidType: /please upload a jpg.*png.*heic image/i,
     tooLarge: /less than.*5.*mb/i,
     uploadFailed: /failed.*upload/i,
   },
