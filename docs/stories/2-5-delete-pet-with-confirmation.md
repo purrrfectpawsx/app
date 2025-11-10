@@ -1,6 +1,6 @@
 # Story 2.5: Delete Pet with Confirmation
 
-Status: drafted
+Status: ready
 
 ## Story
 
