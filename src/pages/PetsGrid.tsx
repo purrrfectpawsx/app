@@ -129,6 +129,20 @@ export function PetsGrid() {
     return (
       <div className="min-h-screen bg-gray-50">
         {petDialog}
+        <div className="max-w-7xl mx-auto p-6">
+          {/* Success message banner */}
+          {successMessage && (
+            <div className="bg-green-50 border border-green-200 text-green-800 rounded-md p-4 flex items-center justify-between mb-6">
+              <span>{successMessage}</span>
+              <button
+                onClick={() => setSuccessMessage(null)}
+                className="text-green-600 hover:text-green-800"
+              >
+                ×
+              </button>
+            </div>
+          )}
+        </div>
         <EmptyPetsState onAddPet={handleAddPet} />
       </div>
     )

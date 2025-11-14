@@ -260,36 +260,49 @@ export function DeletePetDialog({
               </div>
             )}
 
-            {/* Display counts if available and items exist */}
-            {counts && totalItems > 0 && (
+            {/* Display counts if available */}
+            {counts && (
               <div className="bg-destructive/10 border border-destructive/20 rounded-md p-3">
-                <p className="font-semibold text-sm mb-2">This will delete:</p>
-                <ul className="list-disc list-inside text-sm space-y-1">
-                  {counts.healthRecords > 0 && (
-                    <li>
-                      {counts.healthRecords} health record
-                      {counts.healthRecords !== 1 ? 's' : ''}
-                    </li>
-                  )}
-                  {counts.expenses > 0 && (
-                    <li>
-                      {counts.expenses} expense
-                      {counts.expenses !== 1 ? 's' : ''}
-                    </li>
-                  )}
-                  {counts.reminders > 0 && (
-                    <li>
-                      {counts.reminders} reminder
-                      {counts.reminders !== 1 ? 's' : ''}
-                    </li>
-                  )}
-                  {counts.documents > 0 && (
-                    <li>
-                      {counts.documents} document
-                      {counts.documents !== 1 ? 's' : ''}
-                    </li>
-                  )}
-                </ul>
+                <p className="font-semibold text-sm mb-2">
+                  {totalItems > 0
+                    ? 'This will delete:'
+                    : 'No related records to delete'}
+                </p>
+                {totalItems > 0 && (
+                  <ul className="list-disc list-inside text-sm space-y-1">
+                    {counts.healthRecords > 0 && (
+                      <li>
+                        {counts.healthRecords} health record
+                        {counts.healthRecords !== 1 ? 's' : ''}
+                      </li>
+                    )}
+                    {counts.expenses > 0 && (
+                      <li>
+                        {counts.expenses} expense
+                        {counts.expenses !== 1 ? 's' : ''}
+                      </li>
+                    )}
+                    {counts.reminders > 0 && (
+                      <li>
+                        {counts.reminders} reminder
+                        {counts.reminders !== 1 ? 's' : ''}
+                      </li>
+                    )}
+                    {counts.documents > 0 && (
+                      <li>
+                        {counts.documents} document
+                        {counts.documents !== 1 ? 's' : ''}
+                      </li>
+                    )}
+                  </ul>
+                )}
+                {totalItems === 0 && (
+                  <p className="text-sm">
+                    {counts.healthRecords} health records, {counts.expenses}{' '}
+                    expenses, {counts.reminders} reminders, {counts.documents}{' '}
+                    documents
+                  </p>
+                )}
               </div>
             )}
 
