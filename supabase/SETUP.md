@@ -8,6 +8,7 @@ Run the following migrations in order via the Supabase SQL Editor:
 
 1. `migrations/001_create_profiles_table.sql` - Creates profiles table (already applied)
 2. `migrations/002_create_pets_table.sql` - Creates pets table for pet profiles
+3. `migrations/003_add_pet_tier_limit.sql` - Adds tier-based limit enforcement for pets
 
 To apply migrations:
 1. Go to your Supabase project dashboard

@@ -11,6 +11,7 @@ import { ForgotPassword } from '@/pages/ForgotPassword'
 import { ResetPassword } from '@/pages/ResetPassword'
 import { PetDetailPage } from '@/pages/PetDetailPage'
 import { PetsGrid } from '@/pages/PetsGrid'
+import { PricingPage } from '@/pages/PricingPage'
 import { VerifiedRoute } from '@/components/auth/VerifiedRoute'
 import { PublicRoute } from '@/components/auth/PublicRoute'
 
@@ -40,6 +41,7 @@ function App() {
             <Route path="/dashboard" element={<Navigate to="/pets" replace />} />
             <Route path="/pets" element={<PetsGrid />} />
             <Route path="/pets/:petId" element={<PetDetailPage />} />
+            <Route path="/pricing" element={<PricingPage />} />
           </Route>
         </Routes>
       </AuthProvider>

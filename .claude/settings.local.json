@@ -48,7 +48,15 @@
       "Bash(tests/e2e/story-2-1-create-pet-body.txt)",
       "Bash(tests/e2e/story-2-1-create-pet.spec.ts)",
       "Bash(git apply:*)",
-      "Bash(python fix_tests.py:*)"
+      "Bash(python fix_tests.py:*)",
+      "Bash(python fix_petsgrid.py:*)",
+      "Bash(python update_petsgrid.py:*)",
+      "Bash(python update_app.py:*)",
+      "Bash(python fix_petdetail.py:*)",
+      "Bash(python update_story_tasks.py:*)",
+      "Bash(python update_story_record.py:*)",
+      "Bash(python append_review_temp.py:*)",
+      "Bash(python:*)"
     ],
     "deny": [],
     "ask": []

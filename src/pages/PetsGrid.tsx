@@ -3,11 +3,16 @@ import { Plus } from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom'
 
 import { usePets } from '@/hooks/usePets'
+import { useAuth } from '@/contexts/AuthContext'
+import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PetCard } from '@/components/pets/PetCard'
 import { EmptyPetsState } from '@/components/pets/EmptyPetsState'
 import { CreatePetForm } from '@/components/pets/CreatePetForm'
+import { UpgradePromptDialog } from '@/components/subscription/UpgradePromptDialog'
+import { TierLimitBanner } from '@/components/subscription/TierLimitBanner'
+import { PetUsageIndicator } from '@/components/subscription/PetUsageIndicator'
 import {
   Dialog,
   DialogContent,
@@ -22,7 +27,10 @@ export function PetsGrid() {
   const [dialogKey, setDialogKey] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false)
+  const [subscriptionTier, setSubscriptionTier] = useState<'free' | 'premium'>('free')
   const { getAllPets, isLoading } = usePets()
+  const { user } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -40,6 +48,30 @@ export function PetsGrid() {
   useEffect(() => {
     fetchPets()
   }, [fetchPets])
+  const fetchSubscriptionTier = useCallback(async () => {
+    if (!user?.id) return
+
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('subscription_tier')
+        .eq('id', user.id)
+        .single()
+
+      if (error) {
+        console.error('Error fetching subscription tier:', error)
+        return
+      }
+
+      setSubscriptionTier(data?.subscription_tier || 'free')
+    } catch (err) {
+      console.error('Error fetching subscription tier:', err)
+    }
+  }, [user])
+
+  useEffect(() => {
+    fetchSubscriptionTier()
+  }, [fetchSubscriptionTier])
   // Show success message from location state (e.g., after pet deletion)
   useEffect(() => {
     const state = location.state as { message?: string }
@@ -57,6 +89,12 @@ export function PetsGrid() {
 
 
   const handleAddPet = () => {
+    // Check if free tier user has reached pet limit
+    if (subscriptionTier === 'free' && pets.length >= 1) {
+      setShowUpgradePrompt(true)
+      return
+    }
+
     setDialogKey(prev => prev + 1)
     setIsDialogOpen(true)
   }
@@ -167,15 +205,24 @@ export function PetsGrid() {
           </div>
         )}
 
+        {/* Tier Limit Banner */}
+        <TierLimitBanner show={subscriptionTier === 'free' && pets.length >= 1} />
+
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-bold text-gray-900">
             My Pets {pets.length > 0 && `(${pets.length})`}
           </h1>
-          <Button onClick={handleAddPet}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Pet
-          </Button>
+          <div className="flex items-center gap-4">
+            <PetUsageIndicator
+              petCount={pets.length}
+              subscriptionTier={subscriptionTier}
+            />
+            <Button onClick={handleAddPet}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Pet
+            </Button>
+          </div>
         </div>
 
         {/* Responsive Grid */}
@@ -185,6 +232,13 @@ export function PetsGrid() {
           ))}
         </div>
       </div>
+
+      {/* Upgrade Prompt Dialog */}
+      <UpgradePromptDialog
+        open={showUpgradePrompt}
+        onOpenChange={setShowUpgradePrompt}
+        feature="pets"
+      />
     </div>
   )
 }

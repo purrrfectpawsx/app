@@ -18,7 +18,7 @@ export function PetDetailPage() {
   const { getPetById, isLoading } = usePets()
   const [pet, setPet] = useState<Pet | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  // const [editDialogOpen, setEditDialogOpen] = useState(false) // TODO: Story 2.4
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
@@ -70,11 +70,11 @@ export function PetDetailPage() {
     // setEditDialogOpen(true)
   }
 
-  const handleEditSuccess = async () => {
-    setEditDialogOpen(false)
-    // Refetch pet data to show updates
-    await fetchPet()
-  }
+  // const handleEditSuccess = async () => {
+  //   setEditDialogOpen(false)
+  //   // Refetch pet data to show updates
+  //   await fetchPet()
+  // }
 
   const handleDelete = () => {
     setDeleteDialogOpen(true)
