@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { Plus } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 
 import { usePets } from '@/hooks/usePets'
 import { Button } from '@/components/ui/button'
@@ -19,9 +19,12 @@ import type { Pet } from '@/schemas/pets'
 export function PetsGrid() {
   const [pets, setPets] = useState<Pet[]>([])
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [dialogKey, setDialogKey] = useState(0)
   const [error, setError] = useState<string | null>(null)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const { getAllPets, isLoading } = usePets()
   const navigate = useNavigate()
+  const location = useLocation()
 
   const fetchPets = useCallback(async () => {
     try {
@@ -37,8 +40,24 @@ export function PetsGrid() {
   useEffect(() => {
     fetchPets()
   }, [fetchPets])
+  // Show success message from location state (e.g., after pet deletion)
+  useEffect(() => {
+    const state = location.state as { message?: string }
+    if (state?.message) {
+      setSuccessMessage(state.message)
+      // Clear state after showing message
+      navigate(location.pathname, { replace: true, state: {} })
+
+      // Auto-hide success message after 5 seconds
+      setTimeout(() => {
+        setSuccessMessage(null)
+      }, 5000)
+    }
+  }, [location, navigate])
+
 
   const handleAddPet = () => {
+    setDialogKey(prev => prev + 1)
     setIsDialogOpen(true)
   }
 
@@ -94,10 +113,13 @@ export function PetsGrid() {
         <DialogHeader>
           <DialogTitle>Create Pet Profile</DialogTitle>
         </DialogHeader>
-        <CreatePetForm
-          onSuccess={handlePetCreated}
-          onCancel={() => setIsDialogOpen(false)}
-        />
+        {isDialogOpen && (
+          <CreatePetForm
+            key={dialogKey}
+            onSuccess={handlePetCreated}
+            onCancel={() => setIsDialogOpen(false)}
+          />
+        )}
       </DialogContent>
     </Dialog>
   )
@@ -118,6 +140,19 @@ export function PetsGrid() {
       {petDialog}
 
       <div className="max-w-7xl mx-auto p-6">
+        {/* Success message banner */}
+        {successMessage && (
+          <div className="bg-green-50 border border-green-200 text-green-800 rounded-md p-4 flex items-center justify-between mb-6">
+            <span>{successMessage}</span>
+            <button
+              onClick={() => setSuccessMessage(null)}
+              className="text-green-600 hover:text-green-800"
+            >
+              ×
+            </button>
+          </div>
+        )}
+
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-bold text-gray-900">

@@ -24,8 +24,9 @@ const speciesIcons = {
 
 export function PetsPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
+  const [dialogKey, setDialogKey] = useState(0)
   const [pets, setPets] = useState<Pet[]>([])
-  const { getAllPets, isLoading } = usePets()
+  const { getAllPets, isLoading} = usePets()
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -67,7 +68,7 @@ export function PetsPage() {
               Manage your pet profiles and track their health
             </p>
           </div>
-          <Button onClick={() => setIsCreateDialogOpen(true)}>
+          <Button onClick={() => { setDialogKey(prev => prev + 1); setIsCreateDialogOpen(true); }}>
             <PlusCircle className="mr-2 h-4 w-4" />
             Create Pet
           </Button>
@@ -147,10 +148,13 @@ export function PetsPage() {
             <DialogHeader>
               <DialogTitle>Create Pet Profile</DialogTitle>
             </DialogHeader>
-            <CreatePetForm
-              onSuccess={handleCreateSuccess}
-              onCancel={() => setIsCreateDialogOpen(false)}
-            />
+            {isCreateDialogOpen && (
+              <CreatePetForm
+                key={dialogKey}
+                onSuccess={handleCreateSuccess}
+                onCancel={() => setIsCreateDialogOpen(false)}
+              />
+            )}
           </DialogContent>
         </Dialog>
       </div>

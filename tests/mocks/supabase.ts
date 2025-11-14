@@ -100,7 +100,7 @@ export function createMockUser(email: string, name: string, verified: boolean = 
 /**
  * Mock Supabase auth responses by intercepting network requests
  */
-export async function mockSupabaseAuth(page: Page): Promise<void> {
+export async function mockSupabaseAuth(page: Page, enforceTierLimits: boolean = false): Promise<void> {
   // Intercept signup requests
   await page.route('**/auth/v1/signup', async (route) => {
     const request = route.request();
@@ -343,18 +343,34 @@ export async function mockSupabaseAuth(page: Page): Promise<void> {
         const petId = idMatch[1];
         const pet = mockPetDatabase.get(petId);
 
-        if (!pet || pet.user_id !== currentUserId) {
-          await route.fulfill({
-            status: 200,
-            contentType: 'application/json',
-            body: JSON.stringify([]), // Empty array means not found
-          });
-          return;
-        }
-
         // Check if .single() was used (Accept header indicates single object response)
         const acceptHeader = request.headers()['accept'] || '';
         const returnSingleObject = acceptHeader.includes('application/vnd.pgrst.object+json');
+
+        if (!pet || pet.user_id !== currentUserId) {
+          // If .single() was used, return 406 with PGRST116 error code
+          // This matches PostgREST behavior for .single() with no matching rows
+          if (returnSingleObject) {
+            await route.fulfill({
+              status: 406,
+              contentType: 'application/json',
+              body: JSON.stringify({
+                code: 'PGRST116',
+                details: 'The result contains 0 rows',
+                hint: null,
+                message: 'JSON object requested, multiple (or no) rows returned',
+              }),
+            });
+          } else {
+            // Normal query returns empty array
+            await route.fulfill({
+              status: 200,
+              contentType: 'application/json',
+              body: JSON.stringify([]),
+            });
+          }
+          return;
+        }
 
         await route.fulfill({
           status: 200,
@@ -386,15 +402,15 @@ export async function mockSupabaseAuth(page: Page): Promise<void> {
     if (method === 'POST') {
       const postData = request.postDataJSON();
 
-      // Check free tier limit (1 pet)
-      const profile = mockProfileDatabase.get(currentUserId);
-      const userPetCount = Array.from(mockPetDatabase.values())
-        .filter(pet => pet.user_id === currentUserId).length;
+      // Conditionally enforce tier limit checking based on test requirements
+      // For Story 2.1 AC6 tests (tier limit enforcement), we enforce the limit
+      // For all other tests, we bypass it to allow multi-pet scenarios
+      if (enforceTierLimits) {
+        const profile = mockProfileDatabase.get(currentUserId);
+        const userPetCount = Array.from(mockPetDatabase.values())
+          .filter(pet => pet.user_id === currentUserId).length;
 
-      if (profile?.subscription_tier === 'free' && userPetCount >= 1) {
-        // Enforce tier limit unless bypass is set
-        const bypassTierLimits = process.env.VITE_BYPASS_TIER_LIMITS === 'true';
-        if (!bypassTierLimits) {
+        if (profile?.subscription_tier === 'free' && userPetCount >= 1) {
           await route.fulfill({
             status: 403,
             contentType: 'application/json',
@@ -617,11 +633,11 @@ export function shouldUseRealSupabase(testFileName?: string): boolean {
 /**
  * Set up Supabase for test (mocked or real based on strategy)
  */
-export async function setupSupabaseForTest(page: Page, testFileName?: string): Promise<void> {
+export async function setupSupabaseForTest(page: Page, testFileName?: string, enforceTierLimits: boolean = false): Promise<void> {
   if (shouldUseRealSupabase(testFileName)) {
     await useRealSupabase(page);
   } else {
-    await mockSupabaseAuth(page);
+    await mockSupabaseAuth(page, enforceTierLimits);
   }
 }
 

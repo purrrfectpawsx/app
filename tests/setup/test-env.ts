@@ -18,7 +18,13 @@ export const test = base.extend({
 
     // Set up Supabase (mocked or real based on test type)
     const testFileName = testInfo.file;
-    await setupSupabaseForTest(page, testFileName);
+    const testTitle = testInfo.title;
+
+    // Enable tier limit enforcement for specific tier limit tests
+    const shouldEnforceTierLimits = testTitle.includes('blocked from creating second pet') ||
+                                     testTitle.includes('Upgrade dialog can be dismissed');
+
+    await setupSupabaseForTest(page, testFileName, shouldEnforceTierLimits);
 
     // Use the page
     await use(page);

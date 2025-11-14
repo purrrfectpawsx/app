@@ -1,29 +1,26 @@
 import { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { ArrowLeft, Edit, Trash2 } from 'lucide-react'
 
 import { usePets } from '@/hooks/usePets'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
 import { PetInfoCard } from '@/components/pets/PetInfoCard'
 import { PetStats } from '@/components/pets/PetStats'
-import { CreatePetForm } from '@/components/pets/CreatePetForm'
+import { DeletePetDialog } from '@/components/pets/DeletePetDialog'
 import type { Pet } from '@/schemas/pets'
 
 export function PetDetailPage() {
   const { petId } = useParams<{ petId: string }>()
   const navigate = useNavigate()
+  const location = useLocation()
   const { getPetById, isLoading } = usePets()
   const [pet, setPet] = useState<Pet | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
   const fetchPet = async () => {
     if (!petId) {
@@ -48,12 +45,29 @@ export function PetDetailPage() {
     fetchPet()
   }, [petId, getPetById])
 
+  // Show success message from location state (e.g., after redirect from deletion)
+  useEffect(() => {
+    const state = location.state as { message?: string }
+    if (state?.message) {
+      setSuccessMessage(state.message)
+      // Clear state after showing message
+      navigate(location.pathname, { replace: true, state: {} })
+
+      // Auto-hide success message after 5 seconds
+      setTimeout(() => {
+        setSuccessMessage(null)
+      }, 5000)
+    }
+  }, [location, navigate])
+
   const handleBack = () => {
     navigate('/pets')
   }
 
   const handleEdit = () => {
-    setEditDialogOpen(true)
+    // TODO: Edit functionality from Story 2.4 needs to be properly implemented
+    console.log('Edit functionality not yet fully implemented')
+    // setEditDialogOpen(true)
   }
 
   const handleEditSuccess = async () => {
@@ -63,8 +77,14 @@ export function PetDetailPage() {
   }
 
   const handleDelete = () => {
-    // TODO: Implement in Story 2.5
-    console.log('Delete functionality coming in Story 2.5')
+    setDeleteDialogOpen(true)
+  }
+
+  const handleDeleteSuccess = () => {
+    // Navigate to pets grid with success message
+    navigate('/pets', {
+      state: { message: `${pet?.name || 'Pet'} has been deleted` },
+    })
   }
 
   // Loading skeleton
@@ -121,10 +141,23 @@ export function PetDetailPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto p-6 space-y-6">
+        {/* Success message banner */}
+        {successMessage && (
+          <div className="bg-green-50 border border-green-200 text-green-800 rounded-md p-4 flex items-center justify-between">
+            <span>{successMessage}</span>
+            <button
+              onClick={() => setSuccessMessage(null)}
+              className="text-green-600 hover:text-green-800"
+            >
+              ×
+            </button>
+          </div>
+        )}
+
         {/* Header with Back and Action Buttons */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Button variant="outline" size="icon" onClick={handleBack}>
+            <Button variant="outline" size="icon" onClick={handleBack} aria-label="Back to pets">
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div>
@@ -197,8 +230,8 @@ export function PetDetailPage() {
           </TabsContent>
         </Tabs>
 
-        {/* Edit Pet Dialog */}
-        <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        {/* Edit Pet Dialog - TODO: Story 2.4 implementation needs to be completed */}
+        {/* <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Edit {pet.name}'s Profile</DialogTitle>
@@ -210,7 +243,15 @@ export function PetDetailPage() {
               onCancel={() => setEditDialogOpen(false)}
             />
           </DialogContent>
-        </Dialog>
+        </Dialog> */}
+
+        {/* Delete Pet Dialog */}
+        <DeletePetDialog
+          pet={pet}
+          open={deleteDialogOpen}
+          onOpenChange={setDeleteDialogOpen}
+          onSuccess={handleDeleteSuccess}
+        />
       </div>
     </div>
   )
