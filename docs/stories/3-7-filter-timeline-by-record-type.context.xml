@@ -1,0 +1,97 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>3</epicId>
+    <storyId>7</storyId>
+    <title>Filter Timeline by Record Type</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-15</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/stories/3-7-filter-timeline-by-record-type.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a pet owner</asA>
+    <iWant>to filter the health timeline by record type</iWant>
+    <soThat>I can focus on specific types of health events (e.g., only vaccines)</soThat>
+    <tasks>
+- Create HealthTimelineFilters component with checkbox group
+- Add state for selected record types (useState)
+- Implement client-side array filter logic
+- Add result count badge
+- Style active filters with type-specific colors
+- Handle "All" checkbox logic
+</tasks>
+  </story>
+
+  <acceptanceCriteria>
+1. Filter bar above timeline with checkboxes for each record type
+2. Record type options: All, Vaccine, Medication, Vet Visit, Symptom, Weight Check
+3. "All" checkbox selected by default (shows all records)
+4. Selecting specific types filters timeline to show only those types
+5. Multiple types can be selected simultaneously
+6. Filter state persists during session (cleared on page reload)
+7. Record count badge shows number of filtered results
+</acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>Epic 3 Story 3.7 - Timeline Filtering</title>
+        <section>Story 3.7</section>
+        <snippet>Filter logic: client-side array filter (simple, fast for typical dataset sizes). State: const [activeFilters, setActiveFilters] = useState(['all']). UI: shadcn/ui Checkbox or custom chip components.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/components/health/HealthTimeline.tsx</path>
+        <kind>component</kind>
+        <symbol>HealthTimeline</symbol>
+        <lines>All</lines>
+        <reason>Add filter bar above timeline list. Pass filtered records to timeline display.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <node>
+        <package>react</package>
+        <version>latest</version>
+        <purpose>useState for filter state management</purpose>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+- Filtering MUST be client-side (array.filter) for performance
+- "All" MUST be default selection on mount
+- Multiple type selection MUST be supported (checkboxes, NOT radio buttons)
+- Filter state MUST persist during session (useState, NOT localStorage for MVP)
+- Result count MUST update when filters change
+- Filtered records MUST maintain date DESC sort order
+  </constraints>
+  <interfaces>
+    <interface>
+      <name>Filter logic</name>
+      <kind>JavaScript array filter</kind>
+      <signature>records.filter(r => activeFilters.includes('all') || activeFilters.includes(r.record_type))</signature>
+      <path>Client-side filtering logic</path>
+    </interface>
+  </interfaces>
+  <tests>
+    <standards>Test filter state, checkbox selection, multi-select, result count, filtered display.</standards>
+    <locations>
+- Component tests: src/components/health/**/*.test.tsx
+- E2E tests: tests/e2e/story-3-7-filter-timeline.spec.ts
+    </locations>
+    <ideas>
+**Component Tests:**
+1. AC3: Test "All" selected by default
+2. AC4: Test selecting vaccine shows only vaccine records
+3. AC5: Test selecting multiple types shows combined results
+4. AC7: Test result count updates correctly
+
+**E2E Tests:**
+1. Filter to vaccines only → Verify only vaccine records shown
+2. Multi-select filters → Verify correct records shown
+    </ideas>
+  </tests>
+</story-context>

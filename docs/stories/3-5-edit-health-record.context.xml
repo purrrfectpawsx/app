@@ -1,0 +1,109 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>3</epicId>
+    <storyId>5</storyId>
+    <title>Edit Health Record</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-15</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/stories/3-5-edit-health-record.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a pet owner</asA>
+    <iWant>to edit existing health records</iWant>
+    <soThat>I can fix mistakes or add missing information</soThat>
+    <tasks>
+- Add Edit button to HealthRecordCard (visible on hover)
+- Create EditHealthRecordForm component (reuses field components from create forms)
+- Load existing record data into form on mount
+- Implement Supabase UPDATE operation
+- Handle success/error states
+- Refresh timeline after successful update
+</tasks>
+  </story>
+
+  <acceptanceCriteria>
+1. Each health record in timeline has "Edit" button/icon visible on hover
+2. Clicking Edit opens form pre-filled with current record data
+3. Form shows appropriate fields based on record type (same as create)
+4. Save button updates record in database
+5. Timeline refreshes to show updated record
+6. Success message displayed after save
+7. Cancel button discards changes and closes form
+</acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Supabase Query Pattern - Update Pattern</title>
+        <section>Supabase Query Patterns</section>
+        <snippet>UPDATE pattern: supabase.from('table').update({...data}).eq('id', recordId).eq('user_id', userId). Always verify ownership with user_id check for security.</snippet>
+      </doc>
+      <doc>
+        <path>docs/stories/3-2-create-vaccine-record.context.xml</path>
+        <title>Create Health Record Form Pattern</title>
+        <section>Reference Implementation</section>
+        <snippet>Reuse CreateHealthRecordForm and field components. For edit, pre-populate form with existing data using defaultValues in useForm.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/components/pets/CreatePetForm.tsx</path>
+        <kind>component reference</kind>
+        <symbol>Form with defaultValues</symbol>
+        <lines>50-60</lines>
+        <reason>Reference for pre-populating form with existing data using React Hook Form defaultValues option</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <node>
+        <package>@supabase/supabase-js</package>
+        <version>^2.38.0</version>
+        <purpose>UPDATE health_records operation</purpose>
+      </node>
+      <node>
+        <package>react-hook-form</package>
+        <version>latest</version>
+        <purpose>Form state with pre-populated values</purpose>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+- Edit form MUST reuse CreateHealthRecordForm and field components from Stories 3.2-3.3
+- Form MUST pre-populate with existing record data using defaultValues
+- UPDATE MUST verify ownership: .eq('id', recordId).eq('user_id', userId)
+- Type-specific JSONB data MUST update correctly (vaccine_data, medication_data, etc.)
+- Success feedback MUST use toast notification
+- Timeline MUST refetch after successful update
+- Cancel button MUST close form without saving
+  </constraints>
+  <interfaces>
+    <interface>
+      <name>health_records UPDATE API</name>
+      <kind>Supabase database operation</kind>
+      <signature>supabase.from('health_records').update({title, date, notes, [type]_data}).eq('id', recordId).eq('user_id', userId)</signature>
+      <path>Supabase pattern from docs/architecture.md Section 5</path>
+    </interface>
+  </interfaces>
+  <tests>
+    <standards>Test pre-population of form fields, UPDATE operation, ownership verification, timeline refresh.</standards>
+    <locations>
+- Component tests: src/components/health/**/*.test.tsx
+- E2E tests: tests/e2e/story-3-5-edit-health-record.spec.ts
+    </locations>
+    <ideas>
+**Component Tests:**
+1. AC2: Test form pre-fills with existing record data
+2. AC4: Test UPDATE operation saves changes
+3. AC5: Test timeline refreshes after update
+4. AC7: Test cancel discards changes
+
+**E2E Tests:**
+1. Create record → Edit → Update → Verify changes in timeline
+2. Test editing different record types
+    </ideas>
+  </tests>
+</story-context>

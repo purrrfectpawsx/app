@@ -1,0 +1,111 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>3</epicId>
+    <storyId>9</storyId>
+    <title>Weight Tracking Chart</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-15</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/stories/3-9-weight-tracking-chart.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a pet owner</asA>
+    <iWant>to see my pet's weight history in a visual chart</iWant>
+    <soThat>I can monitor growth patterns and detect weight issues early</soThat>
+    <tasks>
+- Create WeightTrackingChart component
+- Query weight_check records for current pet
+- Transform data for Recharts format
+- Implement ResponsiveContainer + LineChart
+- Add color-coded dots for body condition
+- Handle mixed units (kg/lbs)
+- Implement click handler to show weight check details
+- Add empty state component
+</tasks>
+  </story>
+
+  <acceptanceCriteria>
+1. Health tab includes "Weight Chart" section below timeline
+2. Line chart displays weight over time (x-axis: date, y-axis: weight)
+3. Chart shows all weight check records for current pet
+4. Data points are clickable to show full weight check details
+5. Chart adapts to weight unit (kg or lbs) - shows mixed units if both used
+6. Body condition markers: color-coded dots (green=ideal, yellow=overweight, blue=underweight)
+7. Empty state when no weight records exist (message + CTA to add weight check)
+</acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>Epic 3 Story 3.9 - Weight Chart</title>
+        <section>Story 3.9</section>
+        <snippet>Use Recharts (already in package.json). Data format: array of {date, weight, unit, bodyCondition}. ResponsiveContainer + LineChart with Line, XAxis, YAxis, Tooltip. Color-coded CustomizedDot for body condition.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Project Initialization - Dependencies</title>
+        <section>Install core dependencies</section>
+        <snippet>recharts already installed as core dependency for charts and data visualization.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/components/health/HealthTimeline.tsx</path>
+        <kind>component</kind>
+        <symbol>HealthTimeline</symbol>
+        <lines>All</lines>
+        <reason>Add WeightTrackingChart below timeline list. Pass weight_check records for charting.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <node>
+        <package>recharts</package>
+        <version>latest</version>
+        <purpose>Line chart for weight tracking visualization</purpose>
+      </node>
+      <node>
+        <package>date-fns</package>
+        <version>latest</version>
+        <purpose>Date formatting for chart x-axis</purpose>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+- Chart MUST use Recharts library (ResponsiveContainer + LineChart)
+- Data MUST be filtered: health_records WHERE record_type = 'weight_check'
+- Chart MUST be responsive using ResponsiveContainer
+- Body condition colors MUST be: green (ideal), yellow (overweight), blue (underweight)
+- Mixed units MUST be handled (show unit label on tooltip)
+- Data points MUST be clickable to show details
+- Empty state MUST show when no weight_check records exist
+- Chart MUST display below timeline section
+  </constraints>
+  <interfaces>
+    <interface>
+      <name>Recharts data format</name>
+      <kind>TypeScript interface</kind>
+      <signature>interface WeightDataPoint { date: string, weight: number, unit: string, bodyCondition: string }</signature>
+      <path>Transform health_records to array of WeightDataPoint</path>
+    </interface>
+  </interfaces>
+  <tests>
+    <standards>Test chart rendering, data transformation, body condition colors, click handlers, empty state.</standards>
+    <locations>
+- Component tests: src/components/health/**/*.test.tsx
+- E2E tests: tests/e2e/story-3-9-weight-chart.spec.ts
+    </locations>
+    <ideas>
+**Component Tests:**
+1. AC2: Test chart renders with correct data
+2. AC6: Test body condition color coding
+3. AC7: Test empty state when no weight records
+
+**E2E Tests:**
+1. Create weight check records → Verify chart displays
+2. Click data point → Verify shows weight check details
+    </ideas>
+  </tests>
+</story-context>

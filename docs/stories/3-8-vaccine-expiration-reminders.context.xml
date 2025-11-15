@@ -1,0 +1,101 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>3</epicId>
+    <storyId>8</storyId>
+    <title>Vaccine Expiration Reminders</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-15</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/stories/3-8-vaccine-expiration-reminders.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a pet owner</asA>
+    <iWant>to see which vaccines are expiring soon</iWant>
+    <soThat>I never miss vaccine renewals</soThat>
+    <tasks>
+- Create VaccineExpirationReminders component
+- Query vaccine records with expiration dates
+- Calculate days until expiration using date-fns
+- Filter vaccines expiring in next 30 days
+- Sort by expiration date (ascending - soonest first)
+- Apply color coding based on urgency (red: 0-7 days, orange: 8-14, yellow: 15-30)
+- Implement scroll-to-record functionality
+- Add "EXPIRED" badge to timeline items with past expiration dates
+</tasks>
+  </story>
+
+  <acceptanceCriteria>
+1. Health tab shows "Upcoming Renewals" section above timeline
+2. Section displays vaccines expiring within next 30 days
+3. Each reminder shows: vaccine name, expiration date, days until expiration
+4. Visual urgency indicators: red (0-7 days), orange (8-14 days), yellow (15-30 days)
+5. Clicking reminder scrolls to vaccine record in timeline
+6. Section hidden when no vaccines expiring in next 30 days
+7. Expired vaccines (past expiration date) marked with "EXPIRED" badge in timeline
+</acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>Epic 3 Story 3.8 - Vaccine Expiration Reminders</title>
+        <section>Story 3.8</section>
+        <snippet>Filter vaccine records where expiration_date within 30 days. Calculate days using date-fns differenceInDays. Color coding: red (0-7), orange (8-14), yellow (15-30). Sort by expiration date ascending.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/components/health/HealthTimeline.tsx</path>
+        <kind>component</kind>
+        <symbol>HealthTimeline</symbol>
+        <lines>All</lines>
+        <reason>Add VaccineExpirationReminders above timeline. Pass vaccine records for filtering.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <node>
+        <package>date-fns</package>
+        <version>latest</version>
+        <purpose>differenceInDays, isBefore, isAfter for expiration calculations</purpose>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+- Reminder section MUST appear above timeline
+- MUST filter vaccines where expiration_date <= today + 30 days
+- MUST calculate days until expiration using date-fns differenceInDays
+- Color coding MUST use Tailwind: red-600 (0-7 days), orange-600 (8-14), yellow-600 (15-30)
+- MUST sort by expiration_date ASC (soonest first)
+- Clicking reminder MUST scroll to record in timeline
+- EXPIRED badge MUST show for expiration_date < today
+- Section MUST be hidden when no upcoming expirations
+  </constraints>
+  <interfaces>
+    <interface>
+      <name>Expiration calculation</name>
+      <kind>date-fns utility</kind>
+      <signature>differenceInDays(parseISO(expirationDate), new Date())</signature>
+      <path>date-fns library</path>
+    </interface>
+  </interfaces>
+  <tests>
+    <standards>Test expiration filtering, days calculation, color coding, sorting, scroll functionality.</standards>
+    <locations>
+- Component tests: src/components/health/**/*.test.tsx
+- E2E tests: tests/e2e/story-3-8-vaccine-expiration.spec.ts
+    </locations>
+    <ideas>
+**Component Tests:**
+1. AC2: Test filters vaccines expiring within 30 days
+2. AC3: Test displays vaccine name, expiration date, days until expiration
+3. AC4: Test urgency color coding (red/orange/yellow)
+4. AC6: Test section hidden when no expirations
+5. AC7: Test EXPIRED badge for past dates
+
+**E2E Tests:**
+1. Create vaccine expiring in 5 days → Verify shows in reminders with red color
+    </ideas>
+  </tests>
+</story-context>

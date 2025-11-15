@@ -1,0 +1,189 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>3</epicId>
+    <storyId>3</storyId>
+    <title>Create Medication, Vet Visit, Symptom, and Weight Check Records</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-15</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/stories/3-3-create-other-record-types.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a pet owner</asA>
+    <iWant>to track different types of health events</iWant>
+    <soThat>I have a complete health history beyond just vaccines</soThat>
+    <tasks>
+- Create MedicationFields component with dosage, frequency, start/end dates
+- Create VetVisitFields component with clinic, vet name, diagnosis, treatment, cost
+- Create SymptomFields component with severity, observed behaviors
+- Create WeightCheckFields component with weight, unit, body condition
+- Implement conditional rendering to show fields based on selected record type
+- Implement save functionality for all 4 record types with type-specific JSONB data
+- Test all record types save and appear in timeline
+</tasks>
+  </story>
+
+  <acceptanceCriteria>
+1. Record type selector allows choosing: Medication, Vet Visit, Symptom, Weight Check
+2. Medication fields: title, date, dosage, frequency (dropdown: daily, twice daily, weekly), start date, end date, notes
+3. Vet Visit fields: title, date, clinic, vet name, diagnosis, treatment, cost (optional), notes
+4. Symptom fields: title, date, severity (dropdown: mild, moderate, severe), observed behaviors (textarea), notes
+5. Weight Check fields: date, weight (number), unit (dropdown: kg, lbs), body condition (dropdown: underweight, ideal, overweight), notes
+6. Form dynamically shows relevant fields based on selected record type
+7. All record types save successfully and appear in timeline
+</acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/FIELD_CLARIFICATIONS.md</path>
+        <title>Health Record Type-Specific Fields</title>
+        <section>Type-Specific Fields (JSONB columns)</section>
+        <snippet>medication_data: dosage, frequency, start_date, end_date. vet_visit_data: clinic, vet_name, diagnosis, treatment, cost. symptom_data: severity (mild/moderate/severe), observed_behaviors. weight_data: weight (number), unit (kg/lbs), body_condition (underweight/ideal/overweight).</snippet>
+      </doc>
+      <doc>
+        <path>src/lib/validation/commonSchemas.ts</path>
+        <title>Reusable Validation Schemas for Health Records</title>
+        <section>Health Record Schemas (lines 241-335)</section>
+        <snippet>healthSchemas.dosage (medication), healthSchemas.frequency (enum), healthSchemas.severity (symptom), healthSchemas.weight (weight check), healthSchemas.weightUnit, healthSchemas.bodyCondition, currencySchemas.optionalAmount (vet visit cost).</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Component Patterns Library - Pattern 5: Component Composition</title>
+        <section>Component Patterns Library</section>
+        <snippet>Break complex forms into focused child components. CreateHealthRecordForm orchestrates type-specific field components (MedicationFields, VetVisitFields, etc.). Use conditional rendering based on recordType state to show relevant fields.</snippet>
+      </doc>
+      <doc>
+        <path>docs/stories/3-2-create-vaccine-record.context.xml</path>
+        <title>Story 3.2 Context - Vaccine Record Creation Pattern</title>
+        <section>Reference Implementation</section>
+        <snippet>Reference implementation for health record creation. Follow same pattern: React Hook Form + Zod, conditional field rendering, Supabase insert with type-specific JSONB data, toast notifications, timeline refresh.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>Epic 3 Story 3.3 - Additional Record Types</title>
+        <section>Story 3.3</section>
+        <snippet>Frequency dropdown options: daily, twice-daily, three-times-daily, every-8-hours, every-12-hours, weekly, as-needed. Severity options: mild, moderate, severe. Body condition options: underweight, ideal, overweight. Cost field uses currency validation with 2 decimal places.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/lib/validation/commonSchemas.ts</path>
+        <kind>validation schemas</kind>
+        <symbol>healthSchemas, currencySchemas, dateSchemas</symbol>
+        <lines>241-335</lines>
+        <reason>Type-specific validation schemas: dosageSchema (medication), frequencySchema (enum for medication), severitySchema (symptom), weightSchema (weight check with 1 decimal max), weightUnitSchema, bodyConditionSchema, currencySchema (vet visit cost).</reason>
+      </artifact>
+      <artifact>
+        <path>docs/stories/3-2-create-vaccine-record.context.xml</path>
+        <kind>context reference</kind>
+        <symbol>VaccineFields component pattern</symbol>
+        <lines>All</lines>
+        <reason>Reference implementation for type-specific field components. Follow same pattern for MedicationFields, VetVisitFields, SymptomFields, WeightCheckFields - each as separate component with conditional rendering.</reason>
+      </artifact>
+      <artifact>
+        <path>src/components/pets/CreatePetForm.tsx</path>
+        <kind>component reference</kind>
+        <symbol>Form patterns</symbol>
+        <lines>1-100</lines>
+        <reason>Reference for dropdown/select implementation using shadcn/ui Select component. Use for frequency, severity, weight unit, body condition dropdowns.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <node>
+        <package>@supabase/supabase-js</package>
+        <version>^2.38.0</version>
+        <purpose>Database operations for health_records INSERT with type-specific JSONB</purpose>
+      </node>
+      <node>
+        <package>react-hook-form</package>
+        <version>latest</version>
+        <purpose>Form state management for all 4 record type forms</purpose>
+      </node>
+      <node>
+        <package>zod</package>
+        <version>^3.22.0</version>
+        <purpose>Schema validation for medication, vet visit, symptom, weight check fields</purpose>
+      </node>
+      <node>
+        <package>@hookform/resolvers</package>
+        <version>latest</version>
+        <purpose>Zod resolver for React Hook Form</purpose>
+      </node>
+      <node>
+        <package>date-fns</package>
+        <version>latest</version>
+        <purpose>Date formatting and validation (medication start/end dates)</purpose>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+- MUST reuse CreateHealthRecordForm from Story 3.2 (do NOT create duplicate form component)
+- Field components MUST be separate: MedicationFields.tsx, VetVisitFields.tsx, SymptomFields.tsx, WeightCheckFields.tsx
+- Conditional rendering MUST use recordType state to show/hide field components
+- ALL validation schemas MUST be imported from src/lib/validation/commonSchemas.ts (NO custom schemas)
+- Frequency dropdown MUST use healthSchemas.frequency enum values exactly as defined
+- Severity dropdown MUST use healthSchemas.severity enum (mild, moderate, severe)
+- Weight field MUST validate with healthSchemas.weight (max 1 decimal place)
+- Cost field MUST use currencySchemas.optionalAmount (max 2 decimal places)
+- Each record type MUST save to same health_records table with different record_type and type-specific JSONB column
+- medication_data MUST store: {dosage, frequency, start_date, end_date}
+- vet_visit_data MUST store: {clinic, vet_name, diagnosis, treatment, cost}
+- symptom_data MUST store: {severity, observed_behaviors}
+- weight_data MUST store: {weight, unit, body_condition}
+- Insert operation MUST include user_id from auth.uid() for RLS enforcement
+- Success feedback MUST use toast notification (Pattern 11)
+- Form MUST refetch health records after successful save to update timeline
+  </constraints>
+  <interfaces>
+    <interface>
+      <name>health_records INSERT API for medication</name>
+      <kind>Supabase database operation</kind>
+      <signature>supabase.from('health_records').insert({ pet_id: UUID, user_id: UUID, record_type: 'medication', title: string, date: string, notes: string|null, medication_data: { dosage: string, frequency: string, start_date: string, end_date?: string } }).select().single()</signature>
+      <path>Supabase pattern from docs/architecture.md Section 5</path>
+    </interface>
+    <interface>
+      <name>MedicationFields props</name>
+      <kind>React component props</kind>
+      <signature>interface MedicationFieldsProps { control: Control&lt;FormData&gt;, errors: FieldErrors&lt;FormData&gt; }</signature>
+      <path>Conditional field component pattern - receives control and errors from parent form</path>
+    </interface>
+    <interface>
+      <name>Weight check validation</name>
+      <kind>Zod schema refinement</kind>
+      <signature>weightSchema validates positive number, max 999.9, max 1 decimal place. Use with weightUnitSchema (enum: kg, lbs)</signature>
+      <path>src/lib/validation/commonSchemas.ts lines 136-154</path>
+    </interface>
+  </interfaces>
+  <tests>
+    <standards>
+React Testing Library + Vitest for component tests. Playwright for E2E tests. Test each record type field component independently, then test conditional rendering logic. Verify type-specific JSONB data saves correctly for each record type.</standards>
+    <locations>
+- Component tests: src/components/health/**/*.test.tsx
+- E2E tests: tests/e2e/story-3-3-create-other-record-types.spec.ts
+- Test utilities: tests/test-utils.tsx
+    </locations>
+    <ideas>
+**Component Tests:**
+1. AC1: Test record type selector allows choosing all 4 types
+2. AC2: Test MedicationFields renders with dosage, frequency, start/end date fields
+3. AC3: Test VetVisitFields renders with clinic, vet name, diagnosis, treatment, cost
+4. AC4: Test SymptomFields renders with severity dropdown and observed behaviors textarea
+5. AC5: Test WeightCheckFields renders with weight number input, unit dropdown, body condition
+6. AC6: Test conditional rendering - selecting medication shows MedicationFields, hides others
+7. AC7: Test medication save - mock Supabase, verify medication_data JSONB structure
+8. AC7: Test vet visit save - verify vet_visit_data JSONB with cost (optional)
+9. AC7: Test symptom save - verify symptom_data JSONB
+10. AC7: Test weight check save - verify weight_data JSONB
+11. Test validation - weight max 1 decimal, cost max 2 decimals, frequency enum values
+
+**E2E Tests:**
+1. Create medication record end-to-end, verify appears in timeline
+2. Create vet visit with cost, verify saves correctly
+3. Create symptom record, verify severity dropdown works
+4. Create weight check, verify unit conversion display (optional)
+    </ideas>
+  </tests>
+</story-context>

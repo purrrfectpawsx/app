@@ -1,0 +1,194 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>3</epicId>
+    <storyId>1</storyId>
+    <title>Create Health Record Database Schema</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-15</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/stories/3-1-create-health-record-database-schema.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a developer</asA>
+    <iWant>to establish the health records database schema</iWant>
+    <soThat>we can store multiple health record types with type-specific fields</soThat>
+    <tasks>
+- Task 1: Create health_records table schema with UUID primary key, columns (id, pet_id, user_id, record_type, title, date, notes), JSON columns (vaccine_data, medication_data, vet_visit_data, symptom_data, weight_data), timestamps (created_at, updated_at), and record_type CHECK constraint
+- Task 2: Create record_type CHECK constraint with values ('vaccine', 'medication', 'vet_visit', 'symptom', 'weight_check')
+- Task 3: Add foreign key constraints (pet_id → pets.id ON DELETE CASCADE, user_id → profiles.id ON DELETE CASCADE)
+- Task 4: Create RLS policies (enable RLS, SELECT/INSERT/UPDATE/DELETE policies ensuring users only access their own records)
+- Task 5: Create database indexes (pet_id, user_id, pet_id+date DESC, record_type, pet_id+record_type)
+- Task 6: Add timestamp triggers (created_at auto-set on INSERT, updated_at auto-update on UPDATE)
+- Task 7: Define JSON schema documentation for type-specific data (vaccine_data, medication_data, vet_visit_data, symptom_data, weight_data)
+- Task 8: Create migration file (migrations/004_create_health_records_table.sql) with idempotent checks and rollback documentation
+- Task 9: Create TypeScript types (src/types/healthRecords.ts) with HealthRecordType, interfaces for each data type, type guards
+- Task 10: Testing and validation (table creation, constraint validation, JSON data storage, FK cascade, RLS policies, indexes, timestamps, TypeScript types)
+</tasks>
+  </story>
+
+  <acceptanceCriteria>
+1. `health_records` table created with columns: id (uuid), pet_id (FK to pets), user_id (FK to profiles for RLS), record_type (enum), title, date, notes, created_at, updated_at
+2. Record type enum includes: vaccine, medication, vet_visit, symptom, weight_check
+3. Type-specific JSON fields: vaccine_data (expiration_date, vet_clinic, dose), medication_data (dosage, frequency, start_date, end_date), vet_visit_data (clinic, vet_name, diagnosis, treatment, cost), symptom_data (severity, observed_behaviors), weight_data (weight, unit, body_condition)
+4. Foreign key constraints with CASCADE DELETE (delete pet → delete all health records)
+5. RLS policies ensure users only access their own health records
+6. Database indexes on: pet_id, user_id, date, record_type for query performance
+</acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture Document - Database Schema Pattern</title>
+        <section>Database Schema Pattern (Section 4)</section>
+        <snippet>All tables MUST follow structure: UUID primary key, user_id FK with CASCADE DELETE, created_at/updated_at timestamps, RLS enabled with CRUD policies, indexes on FKs and queried columns. Use CHECK constraints for enums, JSONB for flexible data.</snippet>
+      </doc>
+      <doc>
+        <path>supabase/MIGRATION_GUIDE.md</path>
+        <title>Database Migration Guide</title>
+        <section>Migration Workflow</section>
+        <snippet>Create migration files as supabase/migrations/00X_description.sql with idempotent checks (IF NOT EXISTS), include rollback SQL in comments. Manual execution via Supabase SQL Editor. Include header with date, story number, description.</snippet>
+      </doc>
+      <doc>
+        <path>docs/FIELD_CLARIFICATIONS.md</path>
+        <title>Field Clarifications for Epic 3+</title>
+        <section>Health Record Fields</section>
+        <snippet>Health records use base fields (record_type, title, date, notes) + type-specific JSONB columns (vaccine_data, medication_data, vet_visit_data, symptom_data, weight_data). Weight tracked as weight_check records, not pet profile field.</snippet>
+      </doc>
+      <doc>
+        <path>src/lib/validation/README.md</path>
+        <title>Form Validation Schemas</title>
+        <section>Health Record Schemas</section>
+        <snippet>Reusable Zod schemas available: healthSchemas.recordType, healthSchemas.dosage, healthSchemas.frequency, healthSchemas.severity, healthSchemas.weight, healthSchemas.weightUnit. Use dateSchemas.date for dates, textSchemas for title/notes.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>Epic 3: Health Tracking & Timeline</title>
+        <section>Story 3.1</section>
+        <snippet>Establish health_records database schema supporting multiple record types (vaccine, medication, vet_visit, symptom, weight_check) with type-specific JSON fields. Foundation for Epic 3 health tracking features.</snippet>
+      </doc>
+      <doc>
+        <path>supabase/SETUP.md</path>
+        <title>Supabase Setup Instructions</title>
+        <section>Database Migrations</section>
+        <snippet>Run migrations in order via Supabase SQL Editor. Migration 004 will be health_records table. Ensure pets table (migration 002) exists before applying as FK dependency.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>supabase/migrations/002_create_pets_table.sql</path>
+        <kind>migration</kind>
+        <symbol>pets table</symbol>
+        <lines>1-58</lines>
+        <reason>Reference implementation: pets table migration shows pattern to follow - UUID primary key, user_id FK with CASCADE DELETE, CHECK constraints for enums, RLS policies for SELECT/INSERT/UPDATE/DELETE, indexes on FKs, table/column comments</reason>
+      </artifact>
+      <artifact>
+        <path>src/schemas/pets.ts</path>
+        <kind>TypeScript types</kind>
+        <symbol>Pet interface, petFormSchema</symbol>
+        <lines>44-58</lines>
+        <reason>Reference implementation: shows pattern for creating TypeScript interfaces matching database schema - separate interface for database entity, string dates for DB fields, nullable optional fields</reason>
+      </artifact>
+      <artifact>
+        <path>src/lib/validation/commonSchemas.ts</path>
+        <kind>validation schemas</kind>
+        <symbol>healthSchemas, dateSchemas, textSchemas</symbol>
+        <lines>All</lines>
+        <reason>Reusable validation schemas for health record forms in Story 3.2+. Contains healthRecordTypeSchema, dosageSchema, frequencySchema, severitySchema, weightSchema, weightUnitSchema, bodyConditionSchema for validation</reason>
+      </artifact>
+      <artifact>
+        <path>supabase/rollback/rollback_002.sql</path>
+        <kind>rollback script</kind>
+        <symbol>pets table rollback</symbol>
+        <lines>1-28</lines>
+        <reason>Reference implementation: pattern for creating rollback scripts - drop policies, triggers, indexes, then table with CASCADE. Should create rollback_004.sql for health_records</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <node>
+        <package>@supabase/supabase-js</package>
+        <version>^2.38.0</version>
+        <purpose>Supabase client for database operations</purpose>
+      </node>
+      <node>
+        <package>zod</package>
+        <version>^3.22.0</version>
+        <purpose>TypeScript schema validation for type-safe health record types</purpose>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+- Database schema MUST follow architecture pattern: UUID primary key, user_id FK with CASCADE DELETE, created_at/updated_at timestamps
+- RLS MUST be enabled on health_records table with policies for all CRUD operations (SELECT, INSERT, UPDATE, DELETE)
+- Foreign key constraints MUST use ON DELETE CASCADE for both pet_id and user_id
+- Record type MUST use CHECK constraint (NOT PostgreSQL ENUM) for flexibility: CHECK (record_type IN ('vaccine', 'medication', 'vet_visit', 'symptom', 'weight_check'))
+- Indexes MUST be created on: pet_id, user_id, pet_id+date DESC (composite), record_type, pet_id+record_type (composite)
+- Migration file MUST be idempotent using IF NOT EXISTS/IF EXISTS checks
+- Migration MUST be number 004 (next in sequence after 001_profiles, 002_pets, 003_tier_limit)
+- TypeScript types MUST be created in src/types/healthRecords.ts (new file, following src/schemas/pets.ts pattern)
+- JSONB columns MUST default to '{}' (empty object) not null
+- Timestamps MUST use TIMESTAMPTZ type with DEFAULT now() and trigger for updated_at
+- RLS INSERT policy MUST verify pet ownership: pet_id IN (SELECT id FROM pets WHERE user_id = auth.uid())
+- Migration MUST include rollback SQL in comments at bottom of file
+- Table and column comments MUST be added for documentation (COMMENT ON TABLE/COLUMN)
+  </constraints>
+  <interfaces>
+    <interface>
+      <name>health_records table</name>
+      <kind>PostgreSQL table</kind>
+      <signature>CREATE TABLE health_records (id UUID, pet_id UUID FK, user_id UUID FK, record_type TEXT CHECK, title TEXT, date DATE, notes TEXT, vaccine_data JSONB, medication_data JSONB, vet_visit_data JSONB, symptom_data JSONB, weight_data JSONB, created_at TIMESTAMPTZ, updated_at TIMESTAMPTZ)</signature>
+      <path>supabase/migrations/004_create_health_records_table.sql</path>
+    </interface>
+    <interface>
+      <name>HealthRecord TypeScript interface</name>
+      <kind>TypeScript interface</kind>
+      <signature>interface HealthRecord { id: string, pet_id: string, user_id: string, record_type: HealthRecordType, title: string, date: string, notes?: string | null, vaccine_data?: VaccineData, medication_data?: MedicationData, vet_visit_data?: VetVisitData, symptom_data?: SymptomData, weight_data?: WeightData, created_at: string, updated_at: string }</signature>
+      <path>src/types/healthRecords.ts</path>
+    </interface>
+    <interface>
+      <name>Supabase query API</name>
+      <kind>Database API</kind>
+      <signature>supabase.from('health_records').select/insert/update/delete</signature>
+      <path>Architecture pattern in docs/architecture.md Section 5</path>
+    </interface>
+  </interfaces>
+  <tests>
+    <standards>
+PostgreSQL database testing approach:
+- Manual testing via Supabase SQL Editor for migration execution
+- Verify table structure via information_schema queries
+- Test constraints by attempting invalid operations (should fail)
+- Test RLS policies by querying as different users
+- Verify cascade deletion by creating and deleting parent entities
+- Use EXPLAIN ANALYZE to verify index usage in queries
+- Compile TypeScript to verify type definitions are valid
+- No automated E2E tests for database schema (manual verification sufficient for Story 3.1)
+    </standards>
+    <locations>
+- Migration file: supabase/migrations/004_create_health_records_table.sql
+- Rollback file: supabase/rollback/rollback_004.sql
+- TypeScript types: src/types/healthRecords.ts
+- Testing checklist embedded in story Dev Notes section
+    </locations>
+    <ideas>
+**Manual Testing Checklist (from story Dev Notes):**
+1. Execute migration SQL in Supabase SQL Editor → Verify success message
+2. Query information_schema.tables → Verify health_records table exists
+3. Query information_schema.columns → Verify all columns present with correct types
+4. INSERT vaccine record → Should succeed
+5. INSERT record with invalid record_type='invalid' → Should fail with constraint violation
+6. INSERT vaccine with vaccine_data JSON → Verify JSON stored correctly
+7. Query health records for specific pet → Should return correct records
+8. Create pet with health records, DELETE pet → Verify health records cascade deleted
+9. Test RLS: User A query → Should only see their own health records
+10. Test RLS: User A INSERT for User B's pet → Should fail (RLS policy check violation)
+11. Run EXPLAIN ANALYZE on query: SELECT * FROM health_records WHERE pet_id = ? ORDER BY date DESC → Verify idx_health_records_pet_date used
+12. INSERT health record → Verify created_at auto-populated
+13. UPDATE health record → Verify updated_at auto-updated
+14. Compile TypeScript project → Verify no errors with new types
+15. Test type guards (isVaccineRecord, isMedicationRecord, etc.) → Verify correct type narrowing
+    </ideas>
+  </tests>
+</story-context>

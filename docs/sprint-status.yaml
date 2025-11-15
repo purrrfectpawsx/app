@@ -1,4 +1,4 @@
-# generated: 2025-11-06
+# generated: 2025-11-15
 # project: app
 # project_key: app
 # tracking_system: file-system
@@ -29,14 +29,14 @@
 # - SM typically drafts next story after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', SM reviews, then Dev moves to 'done'
 
-generated: 2025-11-06
+generated: 2025-11-15
 project: app
 project_key: app
 tracking_system: file-system
 story_location: "{project-root}/docs/stories"
 
 development_status:
-  epic-1: backlog
+  epic-1: contexted
   1-1-user-registration-with-email-password: done
   1-2-email-verification-flow: done
   1-3-user-login-with-email-password: done
@@ -45,7 +45,7 @@ development_status:
   1-6-protected-routes-session-management: done
   epic-1-retrospective: completed
 
-  epic-2: backlog
+  epic-2: contexted
   2-1-create-pet-profile-with-basic-info: done
   2-2-view-all-pets-grid: done
   2-3-pet-detail-page-with-full-info: done
@@ -54,17 +54,17 @@ development_status:
   2-6-free-tier-enforcement-1-pet-limit: done
   epic-2-retrospective: completed
 
-  epic-3: backlog
-  3-1-create-health-record-database-schema: drafted
-  3-2-create-vaccine-record: backlog
-  3-3-create-medication-vet-visit-symptom-and-weight-check-records: backlog
-  3-4-view-health-timeline-with-color-coding: backlog
-  3-5-filter-timeline-by-record-type: backlog
-  3-6-weight-tracking-visualization-chart: backlog
-  3-7-edit-health-record: backlog
-  3-8-delete-health-record-with-confirmation: backlog
-  3-9-attach-documents-to-health-records: backlog
-  3-10-free-tier-enforcement-50-health-records-limit: backlog
+  epic-3: contexted
+  3-1-create-health-record-database-schema: ready-for-dev
+  3-2-create-vaccine-record: ready-for-dev
+  3-3-create-medication-vet-visit-symptom-and-weight-check-records: ready-for-dev
+  3-4-view-health-timeline-with-color-coding: ready-for-dev
+  3-5-filter-timeline-by-record-type: ready-for-dev
+  3-6-weight-tracking-visualization-chart: ready-for-dev
+  3-7-edit-health-record: ready-for-dev
+  3-8-delete-health-record-with-confirmation: ready-for-dev
+  3-9-attach-documents-to-health-records: ready-for-dev
+  3-10-free-tier-enforcement-50-health-records-limit: ready-for-dev
   epic-3-retrospective: optional
 
   epic-4: backlog

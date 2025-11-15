@@ -1,0 +1,196 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>3</epicId>
+    <storyId>2</storyId>
+    <title>Create Vaccine Record</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-15</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/stories/3-2-create-vaccine-record.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a pet owner</asA>
+    <iWant>to record vaccine information with expiration dates</iWant>
+    <soThat>I never miss vaccine renewals and have proof for boarding/travel</soThat>
+    <tasks>
+- Task 1: Create "Add Health Record" button on pet detail Health tab
+- Task 2: Create health record type selector
+- Task 3: Create VaccineFields component with form fields
+- Task 4: Implement form validation with React Hook Form + Zod
+- Task 5: Implement save functionality
+- Task 6: Success feedback and UI updates
+</tasks>
+  </story>
+
+  <acceptanceCriteria>
+1. "Add Health Record" button visible on pet detail Health tab
+2. Record type selector shows: Vaccine, Medication, Vet Visit, Symptom, Weight Check
+3. Selecting "Vaccine" shows form fields: title (required), date (required), expiration date (optional), vet clinic (optional), dose (optional), notes (optional)
+4. Date defaults to today with calendar picker
+5. Expiration date validates must be after vaccine date
+6. Successful save shows success message and adds record to timeline
+7. Form validation prevents submission without required fields
+</acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Component Patterns Library - Pattern 1: Form Components with Zod</title>
+        <section>Component Patterns Library (Section 14)</section>
+        <snippet>React Hook Form + Zod validation pattern established in Epic 2. Define schema with Zod, use zodResolver, derive TypeScript types from schema. Reusable validation schemas in src/lib/validation/commonSchemas.ts for health records, dates, currency, text fields.</snippet>
+      </doc>
+      <doc>
+        <path>docs/FIELD_CLARIFICATIONS.md</path>
+        <title>Health Record Fields - Vaccine Data Schema</title>
+        <section>Type-Specific Fields (JSONB columns)</section>
+        <snippet>vaccine_data JSONB fields: expiration_date (when vaccine expires), vet_clinic (clinic where vaccine given), dose (dosage information). Base fields (all record types): record_type, title, date, notes.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>Epic 3 Story 3.2 - Create Vaccine Record</title>
+        <section>Story 3.2</section>
+        <snippet>Form fields: title (required), date (required, defaults to today), expiration_date (optional, must be after vaccine date), vet_clinic (optional), dose (optional), notes (optional). Record type selector includes: Vaccine, Medication, Vet Visit, Symptom, Weight Check.</snippet>
+      </doc>
+      <doc>
+        <path>docs/stories/3-1-create-health-record-database-schema.context.xml</path>
+        <title>Story 3.1 Context - Database Schema</title>
+        <section>Health Records Table Schema</section>
+        <snippet>health_records table created in migration 004 with columns: id (UUID), pet_id (FK to pets), user_id (FK to profiles), record_type (CHECK constraint), title, date, notes, vaccine_data (JSONB), medication_data, vet_visit_data, symptom_data, weight_data, created_at, updated_at. RLS policies ensure users only access their own records.</snippet>
+      </doc>
+      <doc>
+        <path>src/lib/validation/README.md</path>
+        <title>Reusable Validation Schemas Guide</title>
+        <section>Usage Guidelines</section>
+        <snippet>Import grouped schemas: healthSchemas.recordType, dateSchemas.date, textSchemas.recordTitle, textSchemas.notes. Combine schemas to create type-specific validation. All schemas TypeScript-safe with Zod inference.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Supabase Query Pattern - Insert Pattern</title>
+        <section>Supabase Query Patterns (Section 5)</section>
+        <snippet>INSERT pattern: supabase.from('table').insert({...data}).select().single(). Always include user_id FK for RLS enforcement. Check error first, destructure {data, error}. Use TypeScript generics for type safety.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/lib/validation/commonSchemas.ts</path>
+        <kind>validation schemas</kind>
+        <symbol>healthSchemas, dateSchemas, textSchemas</symbol>
+        <lines>281-509</lines>
+        <reason>Reusable Zod schemas for vaccine record form validation. Use healthRecordTypeSchema for record_type, recordTitleSchema for title, dateSchema for date/expiration_date, notesSchema for notes, optionalShortTextSchema for vet_clinic and dose.</reason>
+      </artifact>
+      <artifact>
+        <path>src/components/pets/CreatePetForm.tsx</path>
+        <kind>component</kind>
+        <symbol>CreatePetForm</symbol>
+        <lines>1-100</lines>
+        <reason>Reference implementation: React Hook Form + Zod pattern, useForm with zodResolver, form submission with error handling, success/error states, toast notifications. Follow this pattern for vaccine record form.</reason>
+      </artifact>
+      <artifact>
+        <path>src/pages/PetDetailPage.tsx</path>
+        <kind>page component</kind>
+        <symbol>PetDetailPage, Tabs</symbol>
+        <lines>1-200</lines>
+        <reason>Location for Health tab where "Add Health Record" button will be added. Uses shadcn/ui Tabs component. Health tab currently exists but empty - add button and form components here.</reason>
+      </artifact>
+      <artifact>
+        <path>docs/stories/3-1-create-health-record-database-schema.context.xml</path>
+        <kind>context reference</kind>
+        <symbol>health_records table schema, TypeScript types</symbol>
+        <lines>All</lines>
+        <reason>Contains complete database schema, TypeScript interface definitions, RLS policies, and migration details for health_records table. Essential reference for understanding data structure and insert operations.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <node>
+        <package>@supabase/supabase-js</package>
+        <version>^2.38.0</version>
+        <purpose>Supabase client for database operations (INSERT health_records)</purpose>
+      </node>
+      <node>
+        <package>react-hook-form</package>
+        <version>latest</version>
+        <purpose>Form state management and validation integration</purpose>
+      </node>
+      <node>
+        <package>zod</package>
+        <version>^3.22.0</version>
+        <purpose>Schema validation for vaccine record form fields</purpose>
+      </node>
+      <node>
+        <package>@hookform/resolvers</package>
+        <version>latest</version>
+        <purpose>Zod resolver for React Hook Form</purpose>
+      </node>
+      <node>
+        <package>date-fns</package>
+        <version>latest</version>
+        <purpose>Date formatting and validation (expiration_date > date)</purpose>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+- Form MUST use React Hook Form + Zod validation pattern (Pattern 1 from architecture.md)
+- Validation schemas MUST be imported from src/lib/validation/commonSchemas.ts (NO custom schemas)
+- Date field MUST default to today's date using date-fns format(new Date(), 'yyyy-MM-DD')
+- Expiration date MUST validate as after vaccine date using custom Zod refine
+- Insert operation MUST include user_id from auth.uid() for RLS enforcement
+- Insert MUST use pattern: supabase.from('health_records').insert({...}).select().single()
+- vaccine_data MUST be stored as JSONB object: {expiration_date, vet_clinic, dose}
+- Success feedback MUST use toast notification (Pattern 11)
+- Form MUST show loading state during submission with disabled button
+- Error handling MUST catch Supabase errors and display user-friendly toast messages
+- Component MUST follow Pattern 5: Composition (CreateHealthRecordForm → VaccineFields)
+- "Add Health Record" button MUST be added to Health tab in PetDetailPage.tsx
+- Record type selector MUST default to 'vaccine' for this story
+- Form MUST refetch health records after successful save to update timeline
+  </constraints>
+  <interfaces>
+    <interface>
+      <name>health_records INSERT API</name>
+      <kind>Supabase database operation</kind>
+      <signature>supabase.from('health_records').insert({ pet_id: UUID, user_id: UUID, record_type: 'vaccine', title: string, date: string, notes: string|null, vaccine_data: { expiration_date?: string, vet_clinic?: string, dose?: string } }).select().single()</signature>
+      <path>Supabase client pattern from docs/architecture.md Section 5</path>
+    </interface>
+    <interface>
+      <name>VaccineFormData interface</name>
+      <kind>TypeScript type</kind>
+      <signature>type VaccineFormData = z.infer&lt;typeof vaccineRecordSchema&gt; where schema uses healthSchemas.recordType, textSchemas.recordTitle, dateSchemas.date, dateSchemas.optionalDate, textSchemas.optionalShort (vet_clinic, dose), textSchemas.notes</signature>
+      <path>Derived from Zod schema via z.infer pattern</path>
+    </interface>
+    <interface>
+      <name>CreateHealthRecordForm props</name>
+      <kind>React component props</kind>
+      <signature>interface CreateHealthRecordFormProps { petId: string, onSuccess?: () => void, onCancel?: () => void }</signature>
+      <path>Follow CreatePetForm pattern from src/components/pets/CreatePetForm.tsx</path>
+    </interface>
+  </interfaces>
+  <tests>
+    <standards>
+React Testing Library + Vitest for component tests. Playwright for E2E tests with mocked Supabase for fast unit tests, real Supabase for smoke tests. Test files co-located with components (*.test.tsx) or in tests/e2e/ for E2E tests. Follow Epic 2 patterns for form validation testing, submission testing, and error handling.</standards>
+    <locations>
+- Component tests: src/components/health/**/*.test.tsx
+- E2E tests: tests/e2e/story-3-2-create-vaccine-record.spec.ts
+- Test utilities: tests/test-utils.tsx (mockSupabase helper)
+    </locations>
+    <ideas>
+**Component Tests (Vitest + RTL):**
+1. AC1: Test "Add Health Record" button renders on Health tab
+2. AC2: Test record type selector shows all 5 types and defaults to 'vaccine'
+3. AC3: Test vaccine form fields render when 'vaccine' selected
+4. AC4: Test date field defaults to today (format YYYY-MM-DD)
+5. AC5: Test expiration_date validation (must be after date) - submit with invalid date, expect error
+6. AC7: Test form validation - submit empty form, expect title/date required errors
+7. Test successful submission - mock Supabase insert, verify toast success message
+8. Test submission error - mock Supabase error, verify toast error message
+
+**E2E Tests (Playwright):**
+1. AC Integration: Create vaccine record end-to-end (navigate to pet detail → Health tab → Add button → fill form → save → verify in timeline)
+2. Test expiration date validation with calendar picker interaction
+3. Test cancel button closes form without saving
+4. Test form persists data when switching record types and back
+    </ideas>
+  </tests>
+</story-context>

@@ -1,0 +1,102 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>3</epicId>
+    <storyId>6</storyId>
+    <title>Delete Health Record</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-15</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/stories/3-6-delete-health-record.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a pet owner</asA>
+    <iWant>to delete health records</iWant>
+    <soThat>I can remove duplicate or incorrect entries</soThat>
+    <tasks>
+- Add Delete button to HealthRecordCard
+- Implement confirmation dialog (reuse pattern from Story 2.5)
+- Implement Supabase DELETE operation
+- Handle success/error states
+- Refresh timeline after successful deletion
+- Add success toast notification
+</tasks>
+  </story>
+
+  <acceptanceCriteria>
+1. Each health record has "Delete" button/icon (destructive color)
+2. Clicking Delete shows confirmation dialog with record title
+3. Confirmation dialog has "Cancel" and "Delete" buttons
+4. Clicking Delete removes record from database
+5. Timeline updates immediately to remove deleted record
+6. Success message confirms deletion
+7. Deleted records are permanently removed (not soft-deleted)
+</acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Component Patterns - Pattern 10: Confirmation Dialogs</title>
+        <section>Component Patterns Library</section>
+        <snippet>Use AlertDialog with clear consequences, destructive styling. Red button, explain what will be deleted, mention if irreversible. Reuse for all delete operations.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Supabase Query Pattern - Delete Pattern</title>
+        <section>Supabase Query Patterns</section>
+        <snippet>DELETE pattern: supabase.from('table').delete().eq('id', recordId).eq('user_id', userId). Security: verify ownership with user_id check.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/components/pets/DeletePetDialog.tsx</path>
+        <kind>component reference</kind>
+        <symbol>DeletePetDialog</symbol>
+        <lines>All</lines>
+        <reason>Reference implementation for confirmation dialog pattern. Create similar DeleteHealthRecordDialog component following same pattern.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <node>
+        <package>@supabase/supabase-js</package>
+        <version>^2.38.0</version>
+        <purpose>DELETE health_records operation</purpose>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+- Confirmation dialog MUST use Pattern 10: AlertDialog with destructive styling
+- DELETE MUST verify ownership: .eq('id', recordId).eq('user_id', userId)
+- Success feedback MUST use toast notification
+- Timeline MUST refresh immediately after deletion
+- Delete button MUST use destructive/red color scheme
+- Deletion is permanent (NOT soft delete)
+  </constraints>
+  <interfaces>
+    <interface>
+      <name>health_records DELETE API</name>
+      <kind>Supabase database operation</kind>
+      <signature>supabase.from('health_records').delete().eq('id', recordId).eq('user_id', userId)</signature>
+      <path>Supabase pattern from docs/architecture.md Section 5</path>
+    </interface>
+  </interfaces>
+  <tests>
+    <standards>Test confirmation dialog, DELETE operation, ownership verification, timeline refresh.</standards>
+    <locations>
+- Component tests: src/components/health/**/*.test.tsx
+- E2E tests: tests/e2e/story-3-6-delete-health-record.spec.ts
+    </locations>
+    <ideas>
+**Component Tests:**
+1. AC2: Test confirmation dialog shows with record title
+2. AC4: Test DELETE operation removes record
+3. AC5: Test timeline refreshes after deletion
+4. Test cancel button closes dialog without deleting
+
+**E2E Tests:**
+1. Create record → Delete with confirmation → Verify removed from timeline
+    </ideas>
+  </tests>
+</story-context>

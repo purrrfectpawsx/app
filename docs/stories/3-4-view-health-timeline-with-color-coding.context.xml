@@ -1,0 +1,147 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>3</epicId>
+    <storyId>4</storyId>
+    <title>View Health Timeline with Color Coding</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-15</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/stories/3-4-view-health-timeline-with-color-coding.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a pet owner</asA>
+    <iWant>to see all health records in a chronological timeline</iWant>
+    <soThat>I can quickly scan my pet's health history at a glance</soThat>
+    <tasks>
+- Create HealthTimeline component with record list structure
+- Fetch health records via Supabase query on mount (ORDER BY date DESC)
+- Map record types to lucide-react icons (Syringe, Pill, Stethoscope, AlertCircle, Scale)
+- Implement type-specific color coding with Tailwind classes
+- Create HealthRecordCard component for each timeline item
+- Implement expandable record detail view (click to expand)
+- Add empty state component for no health records
+</tasks>
+  </story>
+
+  <acceptanceCriteria>
+1. Health tab shows timeline view with records sorted by date (newest first)
+2. Each record displays: icon (type-specific), title, date, record type label
+3. Record type color coding: Vaccine (blue), Medication (green), Vet Visit (orange), Symptom (red), Weight Check (purple)
+4. Empty state shows friendly message with "Add Health Record" CTA when no records exist
+5. Timeline loads all records for current pet on tab mount
+6. Clicking record expands to show full details inline
+</acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Component Patterns - Pattern 8: Skeleton Loaders</title>
+        <section>Component Patterns Library</section>
+        <snippet>Show skeleton UI matching final layout during data fetching. Prevents layout shift, better perceived performance. Use shadcn/ui Skeleton component.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Component Patterns - Pattern 9: Empty States with CTAs</title>
+        <section>Component Patterns Library</section>
+        <snippet>Icon + helpful message + clear CTA button. Friendly heading, helpful description, centered layout. Reuse for empty health timeline.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>Epic 3 Story 3.4 - Timeline View</title>
+        <section>Story 3.4</section>
+        <snippet>Color mapping: Vaccine (blue), Medication (purple), Vet Visit (green), Symptom (orange), Weight Check (teal). Icons: lucide-react (Syringe, Pill, Stethoscope, AlertCircle, Scale). Query: SELECT * FROM health_records WHERE pet_id = $1 ORDER BY date DESC.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Supabase Query Pattern - Fetch with Filtering</title>
+        <section>Supabase Query Patterns</section>
+        <snippet>Fetch pattern: supabase.from('table').select('*').eq('column', value).order('date', {ascending: false}). Always check error first, destructure {data, error}.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/pages/PetDetailPage.tsx</path>
+        <kind>page component</kind>
+        <symbol>Tabs structure</symbol>
+        <lines>All</lines>
+        <reason>Health tab location where HealthTimeline component will be rendered. Reference for tab structure and pet data passing.</reason>
+      </artifact>
+      <artifact>
+        <path>src/components/pets/PetInfoCard.tsx</path>
+        <kind>component reference</kind>
+        <symbol>Card layout pattern</symbol>
+        <lines>All</lines>
+        <reason>Reference for card-based display pattern. HealthRecordCard should follow similar structure with shadcn/ui Card component.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <node>
+        <package>@supabase/supabase-js</package>
+        <version>^2.38.0</version>
+        <purpose>Query health_records for timeline display</purpose>
+      </node>
+      <node>
+        <package>lucide-react</package>
+        <version>latest</version>
+        <purpose>Icons for record types (Syringe, Pill, Stethoscope, AlertCircle, Scale)</purpose>
+      </node>
+      <node>
+        <package>date-fns</package>
+        <version>latest</version>
+        <purpose>Date formatting for timeline display</purpose>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+- Timeline MUST query: SELECT * FROM health_records WHERE pet_id = ? ORDER BY date DESC
+- Records MUST be sorted newest first (date DESC)
+- Color coding MUST use Tailwind CSS classes: blue-600 (vaccine), green-600 (medication), orange-600 (vet visit), red-600 (symptom), purple-600 (weight check)
+- Icons MUST use lucide-react: Syringe (vaccine), Pill (medication), Stethoscope (vet visit), AlertCircle (symptom), Scale (weight check)
+- Empty state MUST use Pattern 9: Icon + message + CTA
+- Loading state MUST use Pattern 8: Skeleton loaders
+- Expandable details MUST show all record fields including type-specific JSONB data
+- Component MUST handle RLS errors gracefully (user doesn't own pet)
+  </constraints>
+  <interfaces>
+    <interface>
+      <name>health_records SELECT API</name>
+      <kind>Supabase database operation</kind>
+      <signature>supabase.from('health_records').select('*').eq('pet_id', petId).order('date', {ascending: false})</signature>
+      <path>Supabase pattern from docs/architecture.md Section 5</path>
+    </interface>
+    <interface>
+      <name>HealthTimeline props</name>
+      <kind>React component props</kind>
+      <signature>interface HealthTimelineProps { petId: string }</signature>
+      <path>Receives petId from parent PetDetailPage to query records</path>
+    </interface>
+  </interfaces>
+  <tests>
+    <standards>
+RTL + Vitest for component tests. Playwright for E2E. Mock Supabase responses for unit tests. Test loading states, empty states, data display, color coding, icon mapping, expandable functionality.</standards>
+    <locations>
+- Component tests: src/components/health/**/*.test.tsx
+- E2E tests: tests/e2e/story-3-4-view-health-timeline.spec.ts
+    </locations>
+    <ideas>
+**Component Tests:**
+1. AC1: Test records render sorted by date DESC
+2. AC2: Test each record displays icon, title, date, type label
+3. AC3: Test color coding - vaccine shows blue, medication green, etc.
+4. AC4: Test empty state renders when no records
+5. AC5: Test timeline queries on mount with pet_id
+6. AC6: Test click expands record to show full details
+7. Test skeleton loaders show during fetch
+8. Test error handling for failed queries
+
+**E2E Tests:**
+1. Navigate to pet detail → Health tab → verify timeline loads
+2. Create health record → verify appears in timeline
+3. Verify color coding visually correct for each type
+4. Click record → verify expands with full details
+    </ideas>
+  </tests>
+</story-context>

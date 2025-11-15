@@ -1,0 +1,111 @@
+<story-context id="bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>3</epicId>
+    <storyId>10</storyId>
+    <title>Export Health Records to PDF</title>
+    <status>drafted</status>
+    <generatedAt>2025-11-15</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/stories/3-10-export-health-records-pdf.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>a pet owner</asA>
+    <iWant>to export my pet's health records to PDF</iWant>
+    <soThat>I can share them with vets or boarding facilities</soThat>
+    <tasks>
+- Add "Export PDF" button to Health tab
+- Research PDF library (jsPDF vs react-pdf vs browser print)
+- Implement PDF generation with sections for each record type
+- Format records in clean, printable layout
+- Include pet photo, name, basic info at top
+- Add branding footer with generation date
+- Handle loading state during generation
+- Trigger browser download with formatted filename
+</tasks>
+  </story>
+
+  <acceptanceCriteria>
+1. "Export PDF" button visible on pet detail Health tab
+2. Clicking button generates PDF with pet name, photo, and all health records
+3. PDF includes sections: Pet Info, Vaccines, Medications, Vet Visits, Symptoms, Weight History
+4. Each section shows records in chronological order (newest first)
+5. PDF includes generation date and app branding (footer)
+6. Browser prompts to save/download PDF file named "PetName-Health-Records-YYYY-MM-DD.pdf"
+7. Loading state shown during PDF generation
+</acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>ADR-005: Use react-pdf/renderer for PDF Generation</title>
+        <section>Architecture Decision Records</section>
+        <snippet>Decision: Use react-pdf/renderer instead of jsPDF. Rationale: React component API (familiar), declarative PDF creation, clean output, server-side compatible.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Project Initialization - Dependencies</title>
+        <section>Install core dependencies</section>
+        <snippet>@react-pdf/renderer already installed as core dependency for PDF generation.</snippet>
+      </doc>
+    </docs>
+    <code>
+      <artifact>
+        <path>src/components/health/HealthTimeline.tsx</path>
+        <kind>component</kind>
+        <symbol>HealthTimeline</symbol>
+        <lines>All</lines>
+        <reason>Add Export PDF button to Health tab header. Access all health records for PDF generation.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+      <node>
+        <package>@react-pdf/renderer</package>
+        <version>latest</version>
+        <purpose>PDF generation with React components</purpose>
+      </node>
+      <node>
+        <package>date-fns</package>
+        <version>latest</version>
+        <purpose>Date formatting for PDF content and filename</purpose>
+      </node>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+- PDF library MUST be @react-pdf/renderer (per ADR-005)
+- PDF MUST include sections for: Pet Info, Vaccines, Medications, Vet Visits, Symptoms, Weight History
+- Records MUST be sorted by date DESC within each section
+- Filename MUST follow format: "PetName-Health-Records-YYYY-MM-DD.pdf"
+- Loading state MUST show during PDF generation
+- PDF MUST include pet photo if available
+- Footer MUST include generation date and app branding
+- Browser MUST trigger download (not open in new tab)
+  </constraints>
+  <interfaces>
+    <interface>
+      <name>react-pdf Document structure</name>
+      <kind>React component</kind>
+      <signature>&lt;Document&gt;&lt;Page&gt;&lt;View&gt;&lt;Text&gt;Content&lt;/Text&gt;&lt;/View&gt;&lt;/Page&gt;&lt;/Document&gt;</signature>
+      <path>@react-pdf/renderer component API</path>
+    </interface>
+  </interfaces>
+  <tests>
+    <standards>Test PDF generation, file download, content sections, filename format, loading state.</standards>
+    <locations>
+- Component tests: src/components/health/**/*.test.tsx
+- E2E tests: tests/e2e/story-3-10-export-pdf.spec.ts
+    </locations>
+    <ideas>
+**Component Tests:**
+1. AC1: Test Export PDF button renders
+2. AC6: Test filename format correct
+3. AC7: Test loading state shows during generation
+
+**E2E Tests:**
+1. Click Export PDF → Verify PDF downloads with correct filename
+2. Verify PDF contains all sections and records
+    </ideas>
+  </tests>
+</story-context>
