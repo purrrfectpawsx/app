@@ -56,8 +56,8 @@ development_status:
 
   epic-3: contexted
   3-1-create-health-record-database-schema: done
-  3-2-create-vaccine-record: ready-for-dev
-  3-3-create-medication-vet-visit-symptom-and-weight-check-records: ready-for-dev
+  3-2-create-vaccine-record: done
+  3-3-create-medication-vet-visit-symptom-and-weight-check-records: done
   3-4-view-health-timeline-with-color-coding: ready-for-dev
   3-5-filter-timeline-by-record-type: ready-for-dev
   3-6-weight-tracking-visualization-chart: ready-for-dev

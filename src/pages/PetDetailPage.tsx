@@ -1,14 +1,21 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
-import { ArrowLeft, Edit, Trash2 } from 'lucide-react'
+import { ArrowLeft, Edit, Trash2, Plus } from 'lucide-react'
 
 import { usePets } from '@/hooks/usePets'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { PetInfoCard } from '@/components/pets/PetInfoCard'
 import { PetStats } from '@/components/pets/PetStats'
 import { DeletePetDialog } from '@/components/pets/DeletePetDialog'
+import { CreateHealthRecordForm } from '@/components/health/CreateHealthRecordForm'
 import type { Pet } from '@/schemas/pets'
 
 export function PetDetailPage() {
@@ -20,6 +27,7 @@ export function PetDetailPage() {
   const [error, setError] = useState<string | null>(null)
   // const [editDialogOpen, setEditDialogOpen] = useState(false) // TODO: Story 2.4
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [healthRecordDialogOpen, setHealthRecordDialogOpen] = useState(false)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
   const fetchPet = async () => {
@@ -85,6 +93,16 @@ export function PetDetailPage() {
     navigate('/pets', {
       state: { message: `${pet?.name || 'Pet'} has been deleted` },
     })
+  }
+
+  const handleAddHealthRecord = () => {
+    setHealthRecordDialogOpen(true)
+  }
+
+  const handleHealthRecordSuccess = () => {
+    setHealthRecordDialogOpen(false)
+    // Refetch pet data to show updates (when timeline is implemented)
+    // For now, just close the dialog
   }
 
   // Loading skeleton
@@ -198,10 +216,22 @@ export function PetDetailPage() {
           </TabsList>
 
           <TabsContent value="health" className="mt-6">
-            <div className="bg-white rounded-lg border p-6 text-center">
-              <p className="text-gray-500">
-                Health records will be available in Epic 3.
-              </p>
+            <div className="space-y-4">
+              {/* Add Health Record Button */}
+              <div className="flex justify-between items-center">
+                <h2 className="text-xl font-semibold text-gray-900">Health Timeline</h2>
+                <Button onClick={handleAddHealthRecord}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Health Record
+                </Button>
+              </div>
+
+              {/* Health Timeline Placeholder */}
+              <div className="bg-white rounded-lg border p-6 text-center">
+                <p className="text-gray-500">
+                  No health records yet. Click "Add Health Record" to create your first entry.
+                </p>
+              </div>
             </div>
           </TabsContent>
 
@@ -252,6 +282,20 @@ export function PetDetailPage() {
           onOpenChange={setDeleteDialogOpen}
           onSuccess={handleDeleteSuccess}
         />
+
+        {/* Add Health Record Dialog */}
+        <Dialog open={healthRecordDialogOpen} onOpenChange={setHealthRecordDialogOpen}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Add Health Record for {pet.name}</DialogTitle>
+            </DialogHeader>
+            <CreateHealthRecordForm
+              petId={pet.id}
+              onSuccess={handleHealthRecordSuccess}
+              onCancel={() => setHealthRecordDialogOpen(false)}
+            />
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   )
