@@ -16,7 +16,11 @@
     "test:smoke:ui": "playwright test --grep @smoke --ui",
     "test:smoke:headed": "playwright test --grep @smoke --headed",
     "test:mocked": "playwright test --grep-invert @smoke",
-    "test:story": "playwright test --grep"
+    "test:story": "playwright test --grep",
+    "db:migrate": "echo \"Apply migrations manually via Supabase SQL Editor\" && echo \"See supabase/SETUP.md for instructions\"",
+    "db:migrate:new": "echo \"Create new migration: supabase/migrations/00X_<description>.sql\"",
+    "db:reset": "echo \"Reset database: Use Supabase Dashboard -> Database -> Reset Database\"",
+    "db:status": "echo \"Check migration status via Supabase Dashboard -> Database -> Migrations\""
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.0",

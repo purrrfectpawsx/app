@@ -55,7 +55,7 @@ development_status:
   epic-2-retrospective: completed
 
   epic-3: contexted
-  3-1-create-health-record-database-schema: ready-for-dev
+  3-1-create-health-record-database-schema: done
   3-2-create-vaccine-record: ready-for-dev
   3-3-create-medication-vet-visit-symptom-and-weight-check-records: ready-for-dev
   3-4-view-health-timeline-with-color-coding: ready-for-dev
