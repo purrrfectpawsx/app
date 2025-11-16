@@ -6,17 +6,17 @@ import { usePets } from '@/hooks/usePets'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { PetInfoCard } from '@/components/pets/PetInfoCard'
 import { PetStats } from '@/components/pets/PetStats'
 import { DeletePetDialog } from '@/components/pets/DeletePetDialog'
 import { CreateHealthRecordForm } from '@/components/health/CreateHealthRecordForm'
+import { HealthTimeline } from '@/components/health/HealthTimeline'
+import { TimelineFilters, type FilterType } from '@/components/health/TimelineFilters'
+import { WeightChart } from '@/components/health/WeightChart'
+import type { HealthRecord } from '@/types/healthRecords'
 import type { Pet } from '@/schemas/pets'
+import { CreatePetForm } from '@/components/pets/CreatePetForm'
 
 export function PetDetailPage() {
   const { petId } = useParams<{ petId: string }>()
@@ -25,10 +25,13 @@ export function PetDetailPage() {
   const { getPetById, isLoading } = usePets()
   const [pet, setPet] = useState<Pet | null>(null)
   const [error, setError] = useState<string | null>(null)
-  // const [editDialogOpen, setEditDialogOpen] = useState(false) // TODO: Story 2.4
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [healthRecordDialogOpen, setHealthRecordDialogOpen] = useState(false)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [timelineKey, setTimelineKey] = useState(0)
+  const [activeFilters, setActiveFilters] = useState<FilterType[]>(['all'])
+  const [healthRecords, setHealthRecords] = useState<HealthRecord[]>([])
 
   const fetchPet = async () => {
     if (!petId) {
@@ -73,16 +76,14 @@ export function PetDetailPage() {
   }
 
   const handleEdit = () => {
-    // TODO: Edit functionality from Story 2.4 needs to be properly implemented
-    console.log('Edit functionality not yet fully implemented')
-    // setEditDialogOpen(true)
+    setEditDialogOpen(true)
   }
 
-  // const handleEditSuccess = async () => {
-  //   setEditDialogOpen(false)
-  //   // Refetch pet data to show updates
-  //   await fetchPet()
-  // }
+  const handleEditSuccess = async () => {
+    setEditDialogOpen(false)
+    // Refetch pet data to show updates
+    await fetchPet()
+  }
 
   const handleDelete = () => {
     setDeleteDialogOpen(true)
@@ -101,8 +102,16 @@ export function PetDetailPage() {
 
   const handleHealthRecordSuccess = () => {
     setHealthRecordDialogOpen(false)
-    // Refetch pet data to show updates (when timeline is implemented)
-    // For now, just close the dialog
+    // Refresh timeline by changing key
+    setTimelineKey((prev) => prev + 1)
+  }
+
+  const handleRecordsLoaded = (records: HealthRecord[]) => {
+    setHealthRecords(records)
+  }
+
+  const handleFilterChange = (newFilters: FilterType[]) => {
+    setActiveFilters(newFilters)
   }
 
   // Loading skeleton
@@ -226,12 +235,24 @@ export function PetDetailPage() {
                 </Button>
               </div>
 
-              {/* Health Timeline Placeholder */}
-              <div className="bg-white rounded-lg border p-6 text-center">
-                <p className="text-gray-500">
-                  No health records yet. Click "Add Health Record" to create your first entry.
-                </p>
-              </div>
+              {/* Timeline Filters */}
+              <TimelineFilters
+                healthRecords={healthRecords}
+                activeFilters={activeFilters}
+                onFilterChange={handleFilterChange}
+              />
+
+              {/* Weight Chart */}
+              <WeightChart healthRecords={healthRecords} petSpecies={pet.species} />
+
+              {/* Health Timeline */}
+              <HealthTimeline
+                key={timelineKey}
+                petId={pet.id}
+                onAddRecord={handleAddHealthRecord}
+                activeFilters={activeFilters}
+                onRecordsLoaded={handleRecordsLoaded}
+              />
             </div>
           </TabsContent>
 
@@ -260,8 +281,8 @@ export function PetDetailPage() {
           </TabsContent>
         </Tabs>
 
-        {/* Edit Pet Dialog - TODO: Story 2.4 implementation needs to be completed */}
-        {/* <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        {/* Edit Pet Dialog */}
+        <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Edit {pet.name}'s Profile</DialogTitle>
@@ -273,7 +294,7 @@ export function PetDetailPage() {
               onCancel={() => setEditDialogOpen(false)}
             />
           </DialogContent>
-        </Dialog> */}
+        </Dialog>
 
         {/* Delete Pet Dialog */}
         <DeletePetDialog

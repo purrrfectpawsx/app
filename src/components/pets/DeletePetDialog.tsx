@@ -75,10 +75,25 @@ export function DeletePetDialog({
 
       // Try to fetch expenses count
       try {
-        const { count: expensesCount } = await supabase
-          .from('expenses')
-          .select('*', { count: 'exact', head: true })
-          .eq('pet_id', pet.id)
+        let expensesCount = 0
+
+        try {
+
+          const { count } = await supabase
+
+            .from('expenses')
+
+            .select('*', { count: 'exact', head: true })
+
+            .eq('pet_id', pet.id)
+
+          expensesCount = count || 0
+
+        } catch (err) {
+
+          // Expenses table doesn't exist yet (planned for Epic 4)
+
+        }
 
         countsData.expenses = expensesCount || 0
       } catch (err) {

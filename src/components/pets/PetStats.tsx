@@ -55,8 +55,9 @@ export function PetStats({ petId }: PetStatsProps) {
           .select('amount')
           .eq('pet_id', petId)
 
-        if (expensesError && expensesError.code !== 'PGRST116') {
-          // PGRST116 is "relation does not exist" - expected if expenses table not created yet
+        if (expensesError && expensesError.code !== 'PGRST116' && expensesError.code !== 'PGRST205') {
+          // PGRST116 is "relation does not exist", PGRST205 is "table not in schema cache"
+          // Both expected if expenses table not created yet
           console.error('Error fetching expenses:', expensesError)
         }
 

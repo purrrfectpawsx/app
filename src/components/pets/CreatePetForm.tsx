@@ -22,6 +22,8 @@ import { PetPhotoUpload } from '@/components/pets/PetPhotoUpload'
 import { UpgradePromptDialog } from '@/components/subscription/UpgradePromptDialog'
 
 interface CreatePetFormProps {
+  mode?: 'create' | 'edit'
+  initialData?: Pet
   onSuccess?: (petId: string) => void
   onCancel?: () => void
 }
@@ -40,11 +42,11 @@ const genderOptions = [
   { value: 'unknown', label: 'Unknown' },
 ] as const
 
-export function CreatePetForm({ onSuccess, onCancel }: CreatePetFormProps) {
+export function CreatePetForm({ mode = 'create', initialData, onSuccess, onCancel }: CreatePetFormProps) {
   const [error, setError] = useState<string | null>(null)
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
-  const { createPet, isLoading } = usePets()
+  const { createPet, updatePet, isLoading } = usePets()
   const navigate = useNavigate()
 
   const {
@@ -55,7 +57,17 @@ export function CreatePetForm({ onSuccess, onCancel }: CreatePetFormProps) {
   } = useForm<PetFormData>({
     resolver: zodResolver(petFormSchema),
     mode: 'onChange',
-    defaultValues: {
+    defaultValues: initialData ? {
+      name: initialData.name,
+      species: initialData.species,
+      breed: initialData.breed || '',
+      birth_date: initialData.birth_date ? new Date(initialData.birth_date) : undefined,
+      weight: initialData.weight || undefined,
+      gender: initialData.gender || undefined,
+      spayed_neutered: initialData.spayed_neutered || false,
+      microchip: initialData.microchip || '',
+      notes: initialData.notes || '',
+    } : {
       spayed_neutered: false,
     },
   })
@@ -65,19 +77,27 @@ export function CreatePetForm({ onSuccess, onCancel }: CreatePetFormProps) {
       setError(null)
       setSuccessMessage(null)
 
-      const newPet = await createPet(data)
+      let pet: Pet
 
-      setSuccessMessage('Pet created successfully!')
+      if (mode === 'edit' && initialData) {
+        // Update existing pet
+        pet = await updatePet(initialData.id, data, initialData.photo_url)
+        setSuccessMessage('Pet updated successfully!')
+      } else {
+        // Create new pet
+        pet = await createPet(data)
+        setSuccessMessage('Pet created successfully!')
+      }
 
       // Capture pet ID for closure
-      const petId = newPet.id
+      const petId = pet.id
 
       // Wait 2 seconds to show success message, then trigger callback or navigate
       setTimeout(() => {
         if (onSuccess) {
           onSuccess(petId)
-        } else {
-          // Default: navigate to pet detail page
+        } else if (mode === 'create') {
+          // Default: navigate to pet detail page for new pets
           navigate(`/pets/${petId}`)
         }
       }, 2000)
