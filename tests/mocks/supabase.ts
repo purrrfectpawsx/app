@@ -44,9 +44,30 @@ export interface MockPet {
 /**
  * Mock user database - stores users created during tests
  */
+
+export interface MockHealthRecord {
+  id: string;
+  pet_id: string;
+  record_type: 'vaccine' | 'medication' | 'vet_visit' | 'symptom' | 'weight_check';
+  title: string;
+  date: string;
+  notes?: string | null;
+  vaccine_data?: any;
+  medication_data?: any;
+  vet_visit_data?: any;
+  symptom_data?: any;
+  weight_check_data?: any;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * Mock databases - stores data created during tests
+ */
 export const mockUserDatabase = new Map<string, MockUser>();
 export const mockProfileDatabase = new Map<string, MockProfile>();
 export const mockPetDatabase = new Map<string, MockPet>();
+export const mockHealthRecordDatabase = new Map<string, MockHealthRecord>();
 
 /**
  * Reset mock databases between tests
@@ -55,6 +76,7 @@ export function resetMockDatabases(): void {
   mockUserDatabase.clear();
   mockProfileDatabase.clear();
   mockPetDatabase.clear();
+  mockHealthRecordDatabase.clear();
 }
 
 /**
@@ -600,6 +622,296 @@ export async function mockSupabaseAuth(page: Page, enforceTierLimits: boolean = 
     // Just continue - the URL itself is what we want (for getPublicUrl)
     await route.continue();
   });
+
+
+  // Intercept health_records CRUD operations
+  await page.route('**/rest/v1/health_records**', async (route) => {
+    const request = route.request();
+    const method = request.method();
+    const url = request.url();
+    const authHeader = request.headers()['authorization'];
+
+    // Extract user ID from auth token
+    let currentUserId: string | null = null;
+    if (authHeader) {
+      const tokenMatch = authHeader.match(/mock_token_([a-f0-9-]+)/);
+      if (tokenMatch) {
+        currentUserId = tokenMatch[1];
+      }
+    }
+
+    if (!currentUserId && method !== 'GET') {
+      await route.fulfill({
+        status: 401,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          error: 'Unauthorized',
+          message: 'No valid session',
+        }),
+      });
+      return;
+    }
+
+    // GET - Fetch health records
+    if (method === 'GET') {
+      // Check for pet_id filter
+      const petIdMatch = url.match(/[?&]pet_id=eq\.([a-f0-9-]+)/);
+
+      if (petIdMatch) {
+        const petId = petIdMatch[1];
+        // Get all health records for this pet
+        const petRecords = Array.from(mockHealthRecordDatabase.values())
+          .filter(record => record.pet_id === petId)
+          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify(petRecords),
+          headers: {
+            'content-range': `0-${Math.max(0, petRecords.length - 1)}/${petRecords.length}`,
+          },
+        });
+      } else {
+        // Get all health records (filtered by RLS in real app, but we'll return empty for now)
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify([]),
+          headers: {
+            'content-range': '0-0/0',
+          },
+        });
+      }
+      return;
+    }
+
+    // POST - Create health record
+    if (method === 'POST') {
+      const postData = request.postDataJSON();
+
+      const record: MockHealthRecord = {
+        id: generateMockUUID(),
+        pet_id: postData.pet_id,
+        record_type: postData.record_type,
+        title: postData.title,
+        date: postData.date || new Date().toISOString().split('T')[0],
+        notes: postData.notes || null,
+        vaccine_data: postData.vaccine_data || null,
+        medication_data: postData.medication_data || null,
+        vet_visit_data: postData.vet_visit_data || null,
+        symptom_data: postData.symptom_data || null,
+        weight_check_data: postData.weight_check_data || null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      mockHealthRecordDatabase.set(record.id, record);
+
+      await route.fulfill({
+        status: 201,
+        contentType: 'application/json',
+        body: JSON.stringify([record]),
+      });
+      return;
+    }
+
+    // PATCH - Update health record
+    if (method === 'PATCH') {
+      const recordIdMatch = url.match(/[?&]id=eq\.([a-f0-9-]+)/);
+      if (recordIdMatch) {
+        const recordId = recordIdMatch[1];
+        const record = mockHealthRecordDatabase.get(recordId);
+
+        if (record) {
+          const patchData = request.postDataJSON();
+          const updatedRecord = {
+            ...record,
+            ...patchData,
+            updated_at: new Date().toISOString(),
+          };
+          mockHealthRecordDatabase.set(recordId, updatedRecord);
+
+          await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify([updatedRecord]),
+          });
+        } else {
+          await route.fulfill({
+            status: 404,
+            contentType: 'application/json',
+            body: JSON.stringify({ error: 'Record not found' }),
+          });
+        }
+      }
+      return;
+    }
+
+    // DELETE - Delete health record
+    if (method === 'DELETE') {
+      const recordIdMatch = url.match(/[?&]id=eq\.([a-f0-9-]+)/);
+      if (recordIdMatch) {
+        const recordId = recordIdMatch[1];
+        mockHealthRecordDatabase.delete(recordId);
+
+        await route.fulfill({
+          status: 204,
+          contentType: 'application/json',
+          body: '',
+        });
+      }
+      return;
+    }
+
+    // Fallback
+    await route.continue();
+  });
+
+  // Intercept health_records CRUD operations
+  await page.route('**/rest/v1/health_records**', async (route) => {
+    const request = route.request();
+    const method = request.method();
+    const url = request.url();
+    const authHeader = request.headers()['authorization'];
+
+    // Extract user ID from auth token
+    let currentUserId: string | null = null;
+    if (authHeader) {
+      const tokenMatch = authHeader.match(/mock_token_([a-f0-9-]+)/);
+      if (tokenMatch) {
+        currentUserId = tokenMatch[1];
+      }
+    }
+
+    if (!currentUserId && method !== 'GET') {
+      await route.fulfill({
+        status: 401,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          error: 'Unauthorized',
+          message: 'No valid session',
+        }),
+      });
+      return;
+    }
+
+    // GET - Fetch health records
+    if (method === 'GET') {
+      // Check for pet_id filter
+      const petIdMatch = url.match(/[?&]pet_id=eq\.([a-f0-9-]+)/);
+
+      if (petIdMatch) {
+        const petId = petIdMatch[1];
+        // Get all health records for this pet
+        const petRecords = Array.from(mockHealthRecordDatabase.values())
+          .filter(record => record.pet_id === petId)
+          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify(petRecords),
+          headers: {
+            'content-range': `0-${Math.max(0, petRecords.length - 1)}/${petRecords.length}`,
+          },
+        });
+      } else {
+        // Get all health records (filtered by RLS in real app, but we'll return empty for now)
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify([]),
+          headers: {
+            'content-range': '0-0/0',
+          },
+        });
+      }
+      return;
+    }
+
+    // POST - Create health record
+    if (method === 'POST') {
+      const postData = request.postDataJSON();
+
+      const record: MockHealthRecord = {
+        id: generateMockUUID(),
+        pet_id: postData.pet_id,
+        record_type: postData.record_type,
+        title: postData.title,
+        date: postData.date || new Date().toISOString().split('T')[0],
+        notes: postData.notes || null,
+        vaccine_data: postData.vaccine_data || null,
+        medication_data: postData.medication_data || null,
+        vet_visit_data: postData.vet_visit_data || null,
+        symptom_data: postData.symptom_data || null,
+        weight_check_data: postData.weight_check_data || null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      mockHealthRecordDatabase.set(record.id, record);
+
+      await route.fulfill({
+        status: 201,
+        contentType: 'application/json',
+        body: JSON.stringify([record]),
+      });
+      return;
+    }
+
+    // PATCH - Update health record
+    if (method === 'PATCH') {
+      const recordIdMatch = url.match(/[?&]id=eq\.([a-f0-9-]+)/);
+      if (recordIdMatch) {
+        const recordId = recordIdMatch[1];
+        const record = mockHealthRecordDatabase.get(recordId);
+
+        if (record) {
+          const patchData = request.postDataJSON();
+          const updatedRecord = {
+            ...record,
+            ...patchData,
+            updated_at: new Date().toISOString(),
+          };
+          mockHealthRecordDatabase.set(recordId, updatedRecord);
+
+          await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify([updatedRecord]),
+          });
+        } else {
+          await route.fulfill({
+            status: 404,
+            contentType: 'application/json',
+            body: JSON.stringify({ error: 'Record not found' }),
+          });
+        }
+      }
+      return;
+    }
+
+    // DELETE - Delete health record
+    if (method === 'DELETE') {
+      const recordIdMatch = url.match(/[?&]id=eq\.([a-f0-9-]+)/);
+      if (recordIdMatch) {
+        const recordId = recordIdMatch[1];
+        mockHealthRecordDatabase.delete(recordId);
+
+        await route.fulfill({
+          status: 204,
+          contentType: 'application/json',
+          body: '',
+        });
+      }
+      return;
+    }
+
+    // Fallback
+    await route.continue();
+  });
+
 }
 
 /**

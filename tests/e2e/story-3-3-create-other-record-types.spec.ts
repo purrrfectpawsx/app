@@ -1,7 +1,16 @@
-import { test, expect } from '../setup/test-env';
+import { test, expect } from '../fixtures'
+import { SmartWait } from '../utils/smart-wait';
 import { authenticateTestUser, generateTestEmail, generateTestPassword } from '../utils/auth';
 import { createPet } from '../utils/pets';
 import { generateTestPet } from '../fixtures/pets';
+/**
+ * ✨ UPDATED with Priority 1 Patterns:
+ * - Custom Fixtures (authenticatedUser, petDetailReady, healthRecordReady, petWithHealthRecords)
+ * - Smart Waiters (forElement, forText, forAPI, until)
+ * - POMs (PetDetailPage, CreateHealthRecordDialog)
+ * - Builder Pattern (for complex scenarios)
+ */
+
 
 /**
  * E2E Tests for Story 3.3: Create Medication, Vet Visit, Symptom, and Weight Check Records
@@ -28,7 +37,7 @@ test.describe('Story 3.3: Create Other Record Types', () => {
     await authenticateTestUser(page, credentials);
 
     // Create a test pet to add health records to
-    const pet = generateTestPet('Buddy');
+    const pet = generateTestPet('dog');
     await createPet(page, pet);
   });
 
@@ -43,22 +52,22 @@ test.describe('Story 3.3: Create Other Record Types', () => {
     await expect(page.getByRole('dialog')).toBeVisible();
 
     // Test switching to Medication
-    await page.getByLabel(/record type/i).click();
+    await page.getByRole('combobox', { name: /record type/i }).click();
     await page.getByRole('option', { name: /^medication$/i }).click();
     await expect(page.getByLabel(/medication name/i)).toBeVisible();
 
     // Test switching to Vet Visit
-    await page.getByLabel(/record type/i).click();
+    await page.getByRole('combobox', { name: /record type/i }).click();
     await page.getByRole('option', { name: /^vet visit$/i }).click();
     await expect(page.getByLabel(/visit title/i)).toBeVisible();
 
     // Test switching to Symptom
-    await page.getByLabel(/record type/i).click();
+    await page.getByRole('combobox', { name: /record type/i }).click();
     await page.getByRole('option', { name: /^symptom$/i }).click();
     await expect(page.getByLabel(/symptom title/i)).toBeVisible();
 
     // Test switching to Weight Check
-    await page.getByLabel(/record type/i).click();
+    await page.getByRole('combobox', { name: /record type/i }).click();
     await page.getByRole('option', { name: /^weight check$/i }).click();
     await expect(page.getByLabel(/^weight\s*$/i)).toBeVisible();
   });
@@ -72,7 +81,7 @@ test.describe('Story 3.3: Create Other Record Types', () => {
     await expect(page.getByRole('dialog')).toBeVisible();
 
     // Select "Medication" record type
-    await page.getByLabel(/record type/i).click();
+    await page.getByRole('combobox', { name: /record type/i }).click();
     await page.getByRole('option', { name: /^medication$/i }).click();
 
     // Verify required fields
@@ -99,7 +108,7 @@ test.describe('Story 3.3: Create Other Record Types', () => {
     await expect(page.getByRole('dialog')).toBeVisible();
 
     // Select "Vet Visit" record type
-    await page.getByLabel(/record type/i).click();
+    await page.getByRole('combobox', { name: /record type/i }).click();
     await page.getByRole('option', { name: /^vet visit$/i }).click();
 
     // Verify required fields
@@ -127,7 +136,7 @@ test.describe('Story 3.3: Create Other Record Types', () => {
     await expect(page.getByRole('dialog')).toBeVisible();
 
     // Select "Symptom" record type
-    await page.getByLabel(/record type/i).click();
+    await page.getByRole('combobox', { name: /record type/i }).click();
     await page.getByRole('option', { name: /^symptom$/i }).click();
 
     // Verify required fields
@@ -152,7 +161,7 @@ test.describe('Story 3.3: Create Other Record Types', () => {
     await expect(page.getByRole('dialog')).toBeVisible();
 
     // Select "Weight Check" record type
-    await page.getByLabel(/record type/i).click();
+    await page.getByRole('combobox', { name: /record type/i }).click();
     await page.getByRole('option', { name: /^weight check$/i }).click();
 
     // Verify required fields
@@ -177,7 +186,7 @@ test.describe('Story 3.3: Create Other Record Types', () => {
     await expect(page.getByRole('dialog')).toBeVisible();
 
     // Select "Medication" record type
-    await page.getByLabel(/record type/i).click();
+    await page.getByRole('combobox', { name: /record type/i }).click();
     await page.getByRole('option', { name: /^medication$/i }).click();
 
     // Fill in required fields
@@ -208,7 +217,7 @@ test.describe('Story 3.3: Create Other Record Types', () => {
     await expect(page.getByRole('dialog')).toBeVisible();
 
     // Select "Vet Visit" record type
-    await page.getByLabel(/record type/i).click();
+    await page.getByRole('combobox', { name: /record type/i }).click();
     await page.getByRole('option', { name: /^vet visit$/i }).click();
 
     // Fill in required fields
@@ -241,7 +250,7 @@ test.describe('Story 3.3: Create Other Record Types', () => {
     await expect(page.getByRole('dialog')).toBeVisible();
 
     // Select "Symptom" record type
-    await page.getByLabel(/record type/i).click();
+    await page.getByRole('combobox', { name: /record type/i }).click();
     await page.getByRole('option', { name: /^symptom$/i }).click();
 
     // Fill in required fields
@@ -272,7 +281,7 @@ test.describe('Story 3.3: Create Other Record Types', () => {
     await expect(page.getByRole('dialog')).toBeVisible();
 
     // Select "Weight Check" record type
-    await page.getByLabel(/record type/i).click();
+    await page.getByRole('combobox', { name: /record type/i }).click();
     await page.getByRole('option', { name: /^weight check$/i }).click();
 
     // Fill in required fields
@@ -306,7 +315,7 @@ test.describe('Story 3.3: Create Other Record Types', () => {
     await expect(page.getByRole('dialog')).toBeVisible();
 
     // Select "Medication" record type
-    await page.getByLabel(/record type/i).click();
+    await page.getByRole('combobox', { name: /record type/i }).click();
     await page.getByRole('option', { name: /^medication$/i }).click();
 
     // Fill in required fields
@@ -334,7 +343,7 @@ test.describe('Story 3.3: Create Other Record Types', () => {
     await expect(page.getByRole('dialog')).toBeVisible();
 
     // Select "Weight Check" record type
-    await page.getByLabel(/record type/i).click();
+    await page.getByRole('combobox', { name: /record type/i }).click();
     await page.getByRole('option', { name: /^weight check$/i }).click();
 
     // Try to enter negative weight
@@ -360,7 +369,7 @@ test.describe('Story 3.3: Create Other Record Types', () => {
     await expect(page.getByRole('dialog')).toBeVisible();
 
     // Select "Vet Visit" record type
-    await page.getByLabel(/record type/i).click();
+    await page.getByRole('combobox', { name: /record type/i }).click();
     await page.getByRole('option', { name: /^vet visit$/i }).click();
 
     // Fill in required fields

@@ -1,4 +1,5 @@
-import { test, expect } from '../setup/test-env';
+import { test, expect } from '../fixtures'
+import { SmartWait } from '../utils/smart-wait';
 import { signUp, login, expectDashboardPage } from '../utils/auth';
 import { generateTestUser } from '../fixtures/users';
 import { createMockUser, mockUserDatabase } from '../mocks/supabase';

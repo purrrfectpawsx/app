@@ -1,34 +1,30 @@
-import { test, expect } from '@playwright/test'
-import { loginAsTestUser } from './helpers/auth'
-import { createPet, deletePet } from './helpers/pets'
-import { createHealthRecord, deleteHealthRecords } from './helpers/healthRecords'
+import { test, expect } from '../fixtures'
+import { SmartWait } from '../utils/smart-wait'
+import { authenticateTestUser, generateTestEmail, generateTestPassword } from '../utils/auth'
+import { createPet } from '../utils/pets'
+import { generateTestPet } from '../fixtures/pets'
+import { createHealthRecord } from '../utils/healthRecords'
 
 test.describe('Story 3.4: View Health Timeline with Color Coding', () => {
-  let petId: string
-
   test.beforeEach(async ({ page }) => {
-    // Login and create a test pet
-    await loginAsTestUser(page)
-    petId = await createPet(page, {
-      name: 'Timeline Test Pet',
-      species: 'dog',
-      birth_date: '2020-01-01',
-    })
-  })
-
-  test.afterEach(async ({ page }) => {
-    // Cleanup: delete health records and pet
-    if (petId) {
-      await deleteHealthRecords(page, petId)
-      await deletePet(page, petId)
+    // Authenticate user
+    const credentials = {
+      name: 'Test User',
+      email: generateTestEmail(),
+      password: generateTestPassword(),
     }
+    await authenticateTestUser(page, credentials)
+
+    // Create a test pet
+    const pet = generateTestPet('dog')
+    await createPet(page, pet)
+
+    // Navigate to Health tab
+    await page.getByRole('tab', { name: /health/i }).click()
   })
 
   test('AC1 & AC7: Empty timeline shows empty state with CTA', async ({ page }) => {
-    // Navigate to pet detail health tab
-    await page.goto(`/pets/${petId}`)
-    await page.click('button:has-text("Health")')
-
+    // Already on Health tab from beforeEach
     // Verify empty state
     await expect(page.getByText('Add your first health record')).toBeVisible()
     await expect(page.getByText(/Start tracking your pet's health history/)).toBeVisible()
@@ -42,7 +38,7 @@ test.describe('Story 3.4: View Health Timeline with Color Coding', () => {
     page,
   }) => {
     // Create test health records
-    await createHealthRecord(page, petId, {
+    await createHealthRecord(page, {
       record_type: 'vaccine',
       title: 'Rabies Vaccine',
       date: '2025-11-10',
@@ -53,7 +49,7 @@ test.describe('Story 3.4: View Health Timeline with Color Coding', () => {
       },
     })
 
-    await createHealthRecord(page, petId, {
+    await createHealthRecord(page, {
       record_type: 'vet_visit',
       title: 'Annual Checkup',
       date: '2025-11-05',
@@ -65,11 +61,7 @@ test.describe('Story 3.4: View Health Timeline with Color Coding', () => {
       },
     })
 
-    // Navigate to pet detail health tab
-    await page.goto(`/pets/${petId}`)
-    await page.click('button:has-text("Health")')
-
-    // Verify both records are displayed
+    // Navigate to pet detail health tab    // Verify both records are displayed
     await expect(page.getByText('Rabies Vaccine')).toBeVisible()
     await expect(page.getByText('Annual Checkup')).toBeVisible()
 
@@ -80,29 +72,25 @@ test.describe('Story 3.4: View Health Timeline with Color Coding', () => {
 
   test('AC1: Timeline sorted newest first', async ({ page }) => {
     // Create records with different dates
-    await createHealthRecord(page, petId, {
+    await createHealthRecord(page, {
       record_type: 'vaccine',
       title: 'Oldest Record',
       date: '2025-11-01',
     })
 
-    await createHealthRecord(page, petId, {
+    await createHealthRecord(page, {
       record_type: 'medication',
       title: 'Middle Record',
       date: '2025-11-10',
     })
 
-    await createHealthRecord(page, petId, {
+    await createHealthRecord(page, {
       record_type: 'vet_visit',
       title: 'Newest Record',
       date: '2025-11-15',
     })
 
-    // Navigate to timeline
-    await page.goto(`/pets/${petId}`)
-    await page.click('button:has-text("Health")')
-
-    // Get all record titles in order
+    // Navigate to timeline    // Get all record titles in order
     const recordTitles = await page.locator('[class*="border"]').allTextContents()
     const titles = recordTitles.join(' ')
 
@@ -126,18 +114,14 @@ test.describe('Story 3.4: View Health Timeline with Color Coding', () => {
     ]
 
     for (const record of recordTypes) {
-      await createHealthRecord(page, petId, {
+      await createHealthRecord(page, {
         record_type: record.type as any,
         title: record.title,
         date: '2025-11-15',
       })
     }
 
-    // Navigate to timeline
-    await page.goto(`/pets/${petId}`)
-    await page.click('button:has-text("Health")')
-
-    // Verify all records are visible
+    // Navigate to timeline    // Verify all records are visible
     for (const record of recordTypes) {
       await expect(page.getByText(record.title)).toBeVisible()
 
@@ -153,7 +137,7 @@ test.describe('Story 3.4: View Health Timeline with Color Coding', () => {
     const pastDate = new Date()
     pastDate.setDate(pastDate.getDate() - 30) // 30 days ago
 
-    await createHealthRecord(page, petId, {
+    await createHealthRecord(page, {
       record_type: 'vaccine',
       title: 'Overdue Vaccine',
       date: '2025-01-01',
@@ -166,7 +150,7 @@ test.describe('Story 3.4: View Health Timeline with Color Coding', () => {
     const futureDate = new Date()
     futureDate.setDate(futureDate.getDate() + 30) // 30 days from now
 
-    await createHealthRecord(page, petId, {
+    await createHealthRecord(page, {
       record_type: 'vaccine',
       title: 'Current Vaccine',
       date: '2025-11-01',
@@ -175,11 +159,7 @@ test.describe('Story 3.4: View Health Timeline with Color Coding', () => {
       },
     })
 
-    // Navigate to timeline
-    await page.goto(`/pets/${petId}`)
-    await page.click('button:has-text("Health")')
-
-    // Verify overdue vaccine has red styling and OVERDUE badge
+    // Navigate to timeline    // Verify overdue vaccine has red styling and OVERDUE badge
     const overdueCard = page.locator('div:has-text("Overdue Vaccine")').first()
     const overdueClassName = await overdueCard.getAttribute('class')
     expect(overdueClassName).toContain('red')
@@ -195,7 +175,7 @@ test.describe('Story 3.4: View Health Timeline with Color Coding', () => {
 
   test('AC5: Clicking timeline entry expands to show full details', async ({ page }) => {
     // Create a vaccine with full details
-    await createHealthRecord(page, petId, {
+    await createHealthRecord(page, {
       record_type: 'vaccine',
       title: 'Detailed Vaccine',
       date: '2025-11-15',
@@ -207,11 +187,7 @@ test.describe('Story 3.4: View Health Timeline with Color Coding', () => {
       },
     })
 
-    // Navigate to timeline
-    await page.goto(`/pets/${petId}`)
-    await page.click('button:has-text("Health")')
-
-    // Verify notes are not initially visible (collapsed state)
+    // Navigate to timeline    // Verify notes are not initially visible (collapsed state)
     await expect(page.getByText('This is a detailed note about the vaccine')).not.toBeVisible()
 
     // Click the card to expand
@@ -247,7 +223,7 @@ test.describe('Story 3.4: View Health Timeline with Color Coding', () => {
     // Create 100 records in batches
     for (let i = 0; i < recordCount; i++) {
       createPromises.push(
-        createHealthRecord(page, petId, {
+        createHealthRecord(page, {
           record_type: 'vaccine',
           title: `Test Record ${i + 1}`,
           date: `2025-${String((i % 12) + 1).padStart(2, '0')}-${String((i % 28) + 1).padStart(2, '0')}`,
@@ -267,12 +243,7 @@ test.describe('Story 3.4: View Health Timeline with Color Coding', () => {
     }
 
     // Measure load time
-    const startTime = Date.now()
-
-    await page.goto(`/pets/${petId}`)
-    await page.click('button:has-text("Health")')
-
-    // Wait for first record to be visible (timeline loaded)
+    const startTime = Date.now()    // Wait for first record to be visible (timeline loaded)
     await expect(page.getByText('Test Record 1')).toBeVisible()
 
     const loadTime = Date.now() - startTime
@@ -296,18 +267,14 @@ test.describe('Story 3.4: View Health Timeline with Color Coding', () => {
     ]
 
     for (const record of recordTypes) {
-      await createHealthRecord(page, petId, {
+      await createHealthRecord(page, {
         record_type: record.type as any,
         title: record.title,
         date: '2025-11-15',
       })
     }
 
-    // Navigate to timeline
-    await page.goto(`/pets/${petId}`)
-    await page.click('button:has-text("Health")')
-
-    // Verify all records have icons (each card should have an SVG icon)
+    // Navigate to timeline    // Verify all records have icons (each card should have an SVG icon)
     for (const record of recordTypes) {
       const card = page.locator(`div:has-text("${record.title}")`).first()
       const icon = card.locator('svg').first()

@@ -1,4 +1,5 @@
-import { test, expect } from '../setup/test-env';
+import { test, expect } from '../fixtures'
+import { SmartWait } from '../utils/smart-wait';
 import { authenticateTestUser, generateTestEmail, generateTestPassword } from '../utils/auth';
 import { createPet } from '../utils/pets';
 

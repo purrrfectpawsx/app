@@ -280,3 +280,26 @@ export async function removePhoto(page: Page): Promise<void> {
   await page.getByRole('button', { name: /remove/i }).or(page.locator('button').filter({ has: page.locator('svg') })).first().click();
   await expect(page.locator('img[alt*="preview" i]')).not.toBeVisible();
 }
+
+/**
+ * Delete a pet by clicking the delete button and confirming
+ *
+ * @param page - Playwright page object
+ * @param petName - Name of the pet to delete (for verification)
+ */
+export async function deletePet(page: Page, petName: string): Promise<void> {
+  // Click Delete button
+  await page.getByRole('button', { name: /delete/i }).click();
+
+  // Wait for confirmation dialog to appear
+  await expect(page.getByRole('alertdialog')).toBeVisible();
+
+  // Confirm deletion
+  await page.getByRole('button', { name: /yes.*delete/i }).click();
+
+  // Wait for redirect to pets grid
+  await expect(page).toHaveURL('/pets', { timeout: 10000 });
+
+  // Wait for success message
+  await expect(page.getByText(new RegExp(`${petName}.*been deleted`, 'i'))).toBeVisible({ timeout: 5000 });
+}

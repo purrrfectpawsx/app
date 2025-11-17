@@ -1,4 +1,5 @@
-import { test, expect } from '../setup/test-env'
+import { test, expect } from '../fixtures'
+import { SmartWait } from '../utils/smart-wait'
 import { authenticateTestUser, generateTestEmail, generateTestPassword } from '../utils/auth'
 import { createPet } from '../utils/pets'
 
@@ -74,30 +75,24 @@ test.describe('Story 3.6: Weight Tracking Visualization Chart @smoke', () => {
 
     // Add first weight check record
     await page.getByRole('button', { name: /add health record/i }).click()
-    await page.getByLabel('Record Type').click()
+    await page.getByRole('combobox', { name: /record type/i }).click()
     await page.getByRole('option', { name: 'Weight Check' }).click()
-    await page.getByLabel('Weight').fill('4')
-    await page.getByLabel('Unit').click()
-    await page.getByRole('option', { name: 'kg' }).click()
-    await page.getByLabel('Body Condition').click()
-    await page.getByRole('option', { name: 'Ideal' }).click()
-    await page.getByLabel('Date').fill('2024-01-01')
-    await page.getByRole('button', { name: /^save$/i }).click()
+    await page.getByRole('spinbutton', { name: /weight/i }).fill('4')
+    // Unit and Body Condition use defaults (kg and Ideal)
+    // Date uses default (today)
+    await page.getByRole('button', { name: /save.*record/i }).click()
 
     // Wait for record to be added
     await page.waitForTimeout(1000)
 
     // Add second weight check record
     await page.getByRole('button', { name: /add health record/i }).click()
-    await page.getByLabel('Record Type').click()
+    await page.getByRole('combobox', { name: /record type/i }).click()
     await page.getByRole('option', { name: 'Weight Check' }).click()
-    await page.getByLabel('Weight').fill('4.5')
-    await page.getByLabel('Unit').click()
-    await page.getByRole('option', { name: 'kg' }).click()
-    await page.getByLabel('Body Condition').click()
-    await page.getByRole('option', { name: 'Ideal' }).click()
-    await page.getByLabel('Date').fill('2024-06-01')
-    await page.getByRole('button', { name: /^save$/i }).click()
+    await page.getByRole('spinbutton', { name: /weight/i }).fill('4.5')
+    // Unit and Body Condition use defaults (kg and Ideal)
+    // Date uses default (today)
+    await page.getByRole('button', { name: /save.*record/i }).click()
 
     await page.waitForTimeout(1000)
 
@@ -124,24 +119,20 @@ test.describe('Story 3.6: Weight Tracking Visualization Chart @smoke', () => {
     // Add 2 weight records
     // Record 1
     await page.getByRole('button', { name: /add health record/i }).click()
-    await page.getByLabel('Record Type').click()
+    await page.getByRole('combobox', { name: /record type/i }).click()
     await page.getByRole('option', { name: 'Weight Check' }).click()
-    await page.getByLabel('Weight').fill('4')
-    await page.getByLabel('Unit').click()
-    await page.getByRole('option', { name: 'kg' }).click()
-    await page.getByLabel('Date').fill('2024-01-01')
-    await page.getByRole('button', { name: /^save$/i }).click()
+    await page.getByRole('spinbutton', { name: /weight/i }).fill('4')
+    // Unit uses default (kg), Date uses default (today)
+    await page.getByRole('button', { name: /save.*record/i }).click()
     await page.waitForTimeout(1000)
 
     // Record 2
     await page.getByRole('button', { name: /add health record/i }).click()
-    await page.getByLabel('Record Type').click()
+    await page.getByRole('combobox', { name: /record type/i }).click()
     await page.getByRole('option', { name: 'Weight Check' }).click()
-    await page.getByLabel('Weight').fill('4.2')
-    await page.getByLabel('Unit').click()
-    await page.getByRole('option', { name: 'kg' }).click()
-    await page.getByLabel('Date').fill('2024-06-01')
-    await page.getByRole('button', { name: /^save$/i }).click()
+    await page.getByRole('spinbutton', { name: /weight/i }).fill('4.2')
+    // Unit uses default (kg), Date uses default (today)
+    await page.getByRole('button', { name: /save.*record/i }).click()
     await page.waitForTimeout(1000)
 
     // Verify chart is visible
@@ -164,24 +155,20 @@ test.describe('Story 3.6: Weight Tracking Visualization Chart @smoke', () => {
     // Add 2 weight records
     // Record 1
     await page.getByRole('button', { name: /add health record/i }).click()
-    await page.getByLabel('Record Type').click()
+    await page.getByRole('combobox', { name: /record type/i }).click()
     await page.getByRole('option', { name: 'Weight Check' }).click()
-    await page.getByLabel('Weight').fill('15')
-    await page.getByLabel('Unit').click()
-    await page.getByRole('option', { name: 'kg' }).click()
-    await page.getByLabel('Date').fill('2024-01-01')
-    await page.getByRole('button', { name: /^save$/i }).click()
+    await page.getByRole('spinbutton', { name: /weight/i }).fill('15')
+    // Unit uses default (kg), Date uses default (today)
+    await page.getByRole('button', { name: /save.*record/i }).click()
     await page.waitForTimeout(1000)
 
     // Record 2
     await page.getByRole('button', { name: /add health record/i }).click()
-    await page.getByLabel('Record Type').click()
+    await page.getByRole('combobox', { name: /record type/i }).click()
     await page.getByRole('option', { name: 'Weight Check' }).click()
-    await page.getByLabel('Weight').fill('18')
-    await page.getByLabel('Unit').click()
-    await page.getByRole('option', { name: 'kg' }).click()
-    await page.getByLabel('Date').fill('2024-06-01')
-    await page.getByRole('button', { name: /^save$/i }).click()
+    await page.getByRole('spinbutton', { name: /weight/i }).fill('18')
+    // Unit uses default (kg), Date uses default (today)
+    await page.getByRole('button', { name: /save.*record/i }).click()
     await page.waitForTimeout(1000)
 
     // Verify all date range buttons exist
@@ -213,24 +200,20 @@ test.describe('Story 3.6: Weight Tracking Visualization Chart @smoke', () => {
     // Add 2 weight records
     // Record 1
     await page.getByRole('button', { name: /add health record/i }).click()
-    await page.getByLabel('Record Type').click()
+    await page.getByRole('combobox', { name: /record type/i }).click()
     await page.getByRole('option', { name: 'Weight Check' }).click()
-    await page.getByLabel('Weight').fill('4')
-    await page.getByLabel('Unit').click()
-    await page.getByRole('option', { name: 'kg' }).click()
-    await page.getByLabel('Date').fill('2024-01-01')
-    await page.getByRole('button', { name: /^save$/i }).click()
+    await page.getByRole('spinbutton', { name: /weight/i }).fill('4')
+    // Unit uses default (kg), Date uses default (today)
+    await page.getByRole('button', { name: /save.*record/i }).click()
     await page.waitForTimeout(1000)
 
     // Record 2
     await page.getByRole('button', { name: /add health record/i }).click()
-    await page.getByLabel('Record Type').click()
+    await page.getByRole('combobox', { name: /record type/i }).click()
     await page.getByRole('option', { name: 'Weight Check' }).click()
-    await page.getByLabel('Weight').fill('4.5')
-    await page.getByLabel('Unit').click()
-    await page.getByRole('option', { name: 'kg' }).click()
-    await page.getByLabel('Date').fill('2024-06-01')
-    await page.getByRole('button', { name: /^save$/i }).click()
+    await page.getByRole('spinbutton', { name: /weight/i }).fill('4.5')
+    // Unit uses default (kg), Date uses default (today)
+    await page.getByRole('button', { name: /save.*record/i }).click()
     await page.waitForTimeout(1000)
 
     // Set viewport to mobile size
@@ -256,28 +239,23 @@ test.describe('Story 3.6: Weight Tracking Visualization Chart @smoke', () => {
     // Add 2 weight records with different body conditions
     // Record 1 - Underweight
     await page.getByRole('button', { name: /add health record/i }).click()
-    await page.getByLabel('Record Type').click()
+    await page.getByRole('combobox', { name: /record type/i }).click()
     await page.getByRole('option', { name: 'Weight Check' }).click()
-    await page.getByLabel('Weight').fill('8')
-    await page.getByLabel('Unit').click()
-    await page.getByRole('option', { name: 'kg' }).click()
+    await page.getByRole('spinbutton', { name: /weight/i }).fill('8')
     await page.getByLabel('Body Condition').click()
     await page.getByRole('option', { name: 'Underweight' }).click()
-    await page.getByLabel('Date').fill('2024-01-01')
-    await page.getByRole('button', { name: /^save$/i }).click()
+    // Unit uses default (kg), Date uses default (today)
+    await page.getByRole('button', { name: /save.*record/i }).click()
     await page.waitForTimeout(1000)
 
     // Record 2 - Ideal
     await page.getByRole('button', { name: /add health record/i }).click()
-    await page.getByLabel('Record Type').click()
+    await page.getByRole('combobox', { name: /record type/i }).click()
     await page.getByRole('option', { name: 'Weight Check' }).click()
-    await page.getByLabel('Weight').fill('15')
-    await page.getByLabel('Unit').click()
-    await page.getByRole('option', { name: 'kg' }).click()
-    await page.getByLabel('Body Condition').click()
-    await page.getByRole('option', { name: 'Ideal' }).click()
-    await page.getByLabel('Date').fill('2024-06-01')
-    await page.getByRole('button', { name: /^save$/i }).click()
+    await page.getByRole('spinbutton', { name: /weight/i }).fill('15')
+    // Unit and Body Condition use defaults (kg and Ideal)
+    // Date uses default (today)
+    await page.getByRole('button', { name: /save.*record/i }).click()
     await page.waitForTimeout(1000)
 
     // Verify body condition legend is visible

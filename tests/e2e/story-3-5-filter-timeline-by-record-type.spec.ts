@@ -1,72 +1,66 @@
-import { test, expect } from '@playwright/test'
-import { loginAsTestUser } from './helpers/auth'
-import { createPet, deletePet } from './helpers/pets'
-import { createHealthRecord, deleteHealthRecords } from './helpers/healthRecords'
+import { test, expect } from '../fixtures'
+import { SmartWait } from '../utils/smart-wait'
+import { authenticateTestUser, generateTestEmail, generateTestPassword } from '../utils/auth'
+import { createPet } from '../utils/pets'
+import { generateTestPet } from '../fixtures/pets'
+import { createHealthRecord } from '../utils/healthRecords'
 
-test.describe('Story 3.5: Filter Timeline by Record Type', () => {
-  let petId: string
-
-  test.beforeEach(async ({ page }) => {
-    // Login and create a test pet
-    await loginAsTestUser(page)
-    petId = await createPet(page, {
-      name: 'Filter Test Pet',
-      species: 'dog',
-      birth_date: '2020-01-01',
-    })
-  })
-
-  test.afterEach(async ({ page }) => {
-    // Cleanup: delete health records and pet
-    if (petId) {
-      await deleteHealthRecords(page, petId)
-      await deletePet(page, petId)
+test.describe('Story 3.5: Filter Timeline by Record Type', () => {  test.beforeEach(async ({ page }) => {
+    // Authenticate user
+    const credentials = {
+      name: 'Test User',
+      email: generateTestEmail(),
+      password: generateTestPassword(),
     }
+    await authenticateTestUser(page, credentials)
+
+    // Create a test pet
+    const pet = generateTestPet('dog')
+    await createPet(page, pet)
+
+    // Navigate to Health tab
+    await page.getByRole('tab', { name: /health/i }).click()
   })
 
   test('AC1 & AC7: All filter chips visible with correct counts', async ({ page }) => {
     // Create health records of different types
-    await createHealthRecord(page, petId, {
+    await createHealthRecord(page, {
       record_type: 'vaccine',
       title: 'Rabies Vaccine',
       date: '2025-11-15',
     })
 
-    await createHealthRecord(page, petId, {
+    await createHealthRecord(page, {
       record_type: 'vaccine',
       title: 'Parvo Vaccine',
       date: '2025-11-14',
     })
 
-    await createHealthRecord(page, petId, {
+    await createHealthRecord(page, {
       record_type: 'medication',
       title: 'Antibiotics',
       date: '2025-11-13',
     })
 
-    await createHealthRecord(page, petId, {
+    await createHealthRecord(page, {
       record_type: 'vet_visit',
       title: 'Annual Checkup',
       date: '2025-11-12',
     })
 
-    await createHealthRecord(page, petId, {
+    await createHealthRecord(page, {
       record_type: 'symptom',
       title: 'Coughing',
       date: '2025-11-11',
     })
 
-    await createHealthRecord(page, petId, {
+    await createHealthRecord(page, {
       record_type: 'weight_check',
       title: 'Monthly Weigh-in',
       date: '2025-11-10',
     })
 
-    // Navigate to pet detail health tab
-    await page.goto(`/pets/${petId}`)
-    await page.click('button:has-text("Health")')
-
-    // Wait for timeline to load
+    // Navigate to pet detail health tab    // Wait for timeline to load
     await page.waitForSelector('button:has-text("All")')
 
     // Verify all filter chips are visible
@@ -86,28 +80,25 @@ test.describe('Story 3.5: Filter Timeline by Record Type', () => {
     page,
   }) => {
     // Create multiple record types
-    await createHealthRecord(page, petId, {
+    await createHealthRecord(page, {
       record_type: 'vaccine',
       title: 'Vaccine Record',
       date: '2025-11-15',
     })
 
-    await createHealthRecord(page, petId, {
+    await createHealthRecord(page, {
       record_type: 'medication',
       title: 'Medication Record',
       date: '2025-11-14',
     })
 
-    await createHealthRecord(page, petId, {
+    await createHealthRecord(page, {
       record_type: 'vet_visit',
       title: 'Vet Visit Record',
       date: '2025-11-13',
     })
 
-    // Navigate to timeline
-    await page.goto(`/pets/${petId}`)
-    await page.click('button:has-text("Health")')
-    await page.waitForSelector('button:has-text("All")')
+    // Navigate to timeline    await page.waitForSelector('button:has-text("All")')
 
     // Initially all records visible (All filter active)
     await expect(page.getByText('Vaccine Record')).toBeVisible()
@@ -135,16 +126,13 @@ test.describe('Story 3.5: Filter Timeline by Record Type', () => {
 
   test('AC4: Cannot deselect all filters (at least one always active)', async ({ page }) => {
     // Create a test record
-    await createHealthRecord(page, petId, {
+    await createHealthRecord(page, {
       record_type: 'vaccine',
       title: 'Test Vaccine',
       date: '2025-11-15',
     })
 
-    // Navigate to timeline
-    await page.goto(`/pets/${petId}`)
-    await page.click('button:has-text("Health")')
-    await page.waitForSelector('button:has-text("All")')
+    // Navigate to timeline    await page.waitForSelector('button:has-text("All")')
 
     // Click Vaccines filter to activate it
     await page.click('button:has-text("Vaccines")')
@@ -164,16 +152,13 @@ test.describe('Story 3.5: Filter Timeline by Record Type', () => {
 
   test('AC5: Active filters visually distinct from inactive', async ({ page }) => {
     // Create test records
-    await createHealthRecord(page, petId, {
+    await createHealthRecord(page, {
       record_type: 'vaccine',
       title: 'Test Vaccine',
       date: '2025-11-15',
     })
 
-    // Navigate to timeline
-    await page.goto(`/pets/${petId}`)
-    await page.click('button:has-text("Health")')
-    await page.waitForSelector('button:has-text("All")')
+    // Navigate to timeline    await page.waitForSelector('button:has-text("All")')
 
     // Check All filter is initially active
     const allButton = page.getByRole('button', { name: /All/i })
@@ -203,22 +188,19 @@ test.describe('Story 3.5: Filter Timeline by Record Type', () => {
 
   test('AC6: Filter state persists during session', async ({ page }) => {
     // Create test records
-    await createHealthRecord(page, petId, {
+    await createHealthRecord(page, {
       record_type: 'vaccine',
       title: 'Test Vaccine',
       date: '2025-11-15',
     })
 
-    await createHealthRecord(page, petId, {
+    await createHealthRecord(page, {
       record_type: 'medication',
       title: 'Test Medication',
       date: '2025-11-14',
     })
 
-    // Navigate to timeline
-    await page.goto(`/pets/${petId}`)
-    await page.click('button:has-text("Health")')
-    await page.waitForSelector('button:has-text("All")')
+    // Navigate to timeline    await page.waitForSelector('button:has-text("All")')
 
     // Set filters to Vaccines only
     await page.click('button:has-text("Vaccines")')
@@ -228,10 +210,7 @@ test.describe('Story 3.5: Filter Timeline by Record Type', () => {
     await expect(page.getByText('Test Medication')).not.toBeVisible()
 
     // Switch tabs and come back
-    await page.click('button:has-text("Expenses")')
-    await page.click('button:has-text("Health")')
-
-    // Verify filter state persists (still showing only vaccines)
+    await page.click('button:has-text("Expenses")')    // Verify filter state persists (still showing only vaccines)
     await expect(page.getByText('Test Vaccine')).toBeVisible()
     await expect(page.getByText('Test Medication')).not.toBeVisible()
 
@@ -242,22 +221,19 @@ test.describe('Story 3.5: Filter Timeline by Record Type', () => {
 
   test('AC1: "All" filter behavior - exclusive when clicked', async ({ page }) => {
     // Create multiple record types
-    await createHealthRecord(page, petId, {
+    await createHealthRecord(page, {
       record_type: 'vaccine',
       title: 'Vaccine Record',
       date: '2025-11-15',
     })
 
-    await createHealthRecord(page, petId, {
+    await createHealthRecord(page, {
       record_type: 'medication',
       title: 'Medication Record',
       date: '2025-11-14',
     })
 
-    // Navigate to timeline
-    await page.goto(`/pets/${petId}`)
-    await page.click('button:has-text("Health")')
-    await page.waitForSelector('button:has-text("All")')
+    // Navigate to timeline    await page.waitForSelector('button:has-text("All")')
 
     // Click Vaccines filter
     await page.click('button:has-text("Vaccines")')
@@ -288,40 +264,37 @@ test.describe('Story 3.5: Filter Timeline by Record Type', () => {
 
   test('AC1: Selecting all types individually activates "All" filter', async ({ page }) => {
     // Create one of each record type
-    await createHealthRecord(page, petId, {
+    await createHealthRecord(page, {
       record_type: 'vaccine',
       title: 'Vaccine Record',
       date: '2025-11-15',
     })
 
-    await createHealthRecord(page, petId, {
+    await createHealthRecord(page, {
       record_type: 'medication',
       title: 'Medication Record',
       date: '2025-11-14',
     })
 
-    await createHealthRecord(page, petId, {
+    await createHealthRecord(page, {
       record_type: 'vet_visit',
       title: 'Vet Visit Record',
       date: '2025-11-13',
     })
 
-    await createHealthRecord(page, petId, {
+    await createHealthRecord(page, {
       record_type: 'symptom',
       title: 'Symptom Record',
       date: '2025-11-12',
     })
 
-    await createHealthRecord(page, petId, {
+    await createHealthRecord(page, {
       record_type: 'weight_check',
       title: 'Weight Check Record',
       date: '2025-11-11',
     })
 
-    // Navigate to timeline
-    await page.goto(`/pets/${petId}`)
-    await page.click('button:has-text("Health")')
-    await page.waitForSelector('button:has-text("All")')
+    // Navigate to timeline    await page.waitForSelector('button:has-text("All")')
 
     // Click Vaccines filter
     await page.click('button:has-text("Vaccines")')
@@ -347,28 +320,25 @@ test.describe('Story 3.5: Filter Timeline by Record Type', () => {
 
   test('AC3 & AC1: Timeline maintains sorting after filtering', async ({ page }) => {
     // Create records with different dates and types
-    await createHealthRecord(page, petId, {
+    await createHealthRecord(page, {
       record_type: 'vaccine',
       title: 'Newest Vaccine',
       date: '2025-11-15',
     })
 
-    await createHealthRecord(page, petId, {
+    await createHealthRecord(page, {
       record_type: 'medication',
       title: 'Middle Medication',
       date: '2025-11-10',
     })
 
-    await createHealthRecord(page, petId, {
+    await createHealthRecord(page, {
       record_type: 'vaccine',
       title: 'Oldest Vaccine',
       date: '2025-11-05',
     })
 
-    // Navigate to timeline
-    await page.goto(`/pets/${petId}`)
-    await page.click('button:has-text("Health")')
-    await page.waitForSelector('button:has-text("All")')
+    // Navigate to timeline    await page.waitForSelector('button:has-text("All")')
 
     // Filter to show only vaccines
     await page.click('button:has-text("Vaccines")')
@@ -391,16 +361,13 @@ test.describe('Story 3.5: Filter Timeline by Record Type', () => {
 
   test('AC8: Keyboard navigation and accessibility', async ({ page }) => {
     // Create test record
-    await createHealthRecord(page, petId, {
+    await createHealthRecord(page, {
       record_type: 'vaccine',
       title: 'Test Vaccine',
       date: '2025-11-15',
     })
 
-    // Navigate to timeline
-    await page.goto(`/pets/${petId}`)
-    await page.click('button:has-text("Health")')
-    await page.waitForSelector('button:has-text("All")')
+    // Navigate to timeline    await page.waitForSelector('button:has-text("All")')
 
     // Verify filter group has proper ARIA label
     const filterGroup = page.locator('div[role="group"][aria-label*="Filter timeline"]')

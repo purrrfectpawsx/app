@@ -1,4 +1,5 @@
-import { test, expect } from '../setup/test-env';
+import { test, expect } from '../fixtures'
+import { SmartWait } from '../utils/smart-wait';
 
 /**
  * E2E Tests for Story 1.4: Google OAuth Integration
