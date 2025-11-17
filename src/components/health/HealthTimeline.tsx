@@ -11,11 +11,12 @@ export type FilterType = 'all' | HealthRecordType
 interface HealthTimelineProps {
   petId: string
   onAddRecord?: () => void
+  onEditRecord?: (record: HealthRecord) => void
   activeFilters?: FilterType[]
   onRecordsLoaded?: (records: HealthRecord[]) => void
 }
 
-export function HealthTimeline({ petId, onAddRecord, activeFilters = ['all'], onRecordsLoaded }: HealthTimelineProps) {
+export function HealthTimeline({ petId, onAddRecord, onEditRecord, activeFilters = ['all'], onRecordsLoaded }: HealthTimelineProps) {
   const [records, setRecords] = useState<HealthRecord[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -150,6 +151,7 @@ export function HealthTimeline({ petId, onAddRecord, activeFilters = ['all'], on
           record={record}
           isExpanded={expandedRecordId === record.id}
           onToggleExpand={() => handleToggleExpand(record.id)}
+          onEdit={onEditRecord}
           isOverdue={isVaccineOverdue(record)}
         />
       ))}

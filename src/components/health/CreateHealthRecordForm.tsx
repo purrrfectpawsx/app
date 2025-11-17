@@ -33,9 +33,11 @@ import { VetVisitFields } from './VetVisitFields'
 import { SymptomFields } from './SymptomFields'
 import { WeightCheckFields } from './WeightCheckFields'
 import { useToast } from '@/hooks/use-toast'
+import type { HealthRecord } from '@/types/healthRecords'
 
 interface CreateHealthRecordFormProps {
   petId: string
+  initialData?: HealthRecord | null
   onSuccess?: () => void
   onCancel?: () => void
 }
@@ -53,12 +55,16 @@ type AllFormData = VaccineFormData | MedicationFormData | VetVisitFormData | Sym
 
 export function CreateHealthRecordForm({
   petId,
+  initialData,
   onSuccess,
   onCancel,
 }: CreateHealthRecordFormProps) {
+  const isEditMode = !!initialData
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-  const [selectedRecordType, setSelectedRecordType] = useState<RecordType>('vaccine')
+  const [selectedRecordType, setSelectedRecordType] = useState<RecordType>(
+    initialData?.record_type as RecordType || 'vaccine'
+  )
   const { user } = useAuth()
   const { toast } = useToast()
 
@@ -135,7 +141,62 @@ export function CreateHealthRecordForm({
     }
   }
 
-  const {
+  // Convert HealthRecord to form data for editing
+  const convertRecordToFormData = (record: HealthRecord): any => {
+    const baseData = {
+      record_type: record.record_type,
+      date: record.date,
+      notes: record.notes,
+    }
+
+    switch (record.record_type) {
+      case 'vaccine':
+        return {
+          ...baseData,
+          title: record.title || '',
+          expiration_date: record.vaccine_data?.expiration_date || null,
+          vet_clinic: record.vaccine_data?.vet_clinic || null,
+          dose: record.vaccine_data?.dose || null,
+        }
+      case 'medication':
+        return {
+          ...baseData,
+          title: record.title || '',
+          dosage: record.medication_data?.dosage || null,
+          frequency: record.medication_data?.frequency || null,
+          start_date: record.medication_data?.start_date || null,
+          end_date: record.medication_data?.end_date || null,
+        }
+      case 'vet_visit':
+        return {
+          ...baseData,
+          title: record.title || '',
+          clinic: record.vet_visit_data?.clinic || null,
+          vet_name: record.vet_visit_data?.vet_name || null,
+          diagnosis: record.vet_visit_data?.diagnosis || null,
+          treatment: record.vet_visit_data?.treatment || null,
+          cost: record.vet_visit_data?.cost || null,
+        }
+      case 'symptom':
+        return {
+          ...baseData,
+          title: record.title || '',
+          severity: record.symptom_data?.severity || null,
+          observed_behaviors: record.symptom_data?.observed_behaviors || null,
+        }
+      case 'weight_check':
+        return {
+          ...baseData,
+          weight: record.weight_data?.weight,
+          unit: record.weight_data?.unit || 'kg',
+          body_condition: record.weight_data?.body_condition || null,
+        }
+      default:
+        return baseData
+    }
+  }
+
+    const {
     register,
     handleSubmit,
     control,
@@ -146,7 +207,9 @@ export function CreateHealthRecordForm({
   } = useForm<AllFormData>({
     resolver: zodResolver(getSchema(selectedRecordType)) as any,
     mode: 'onChange',
-    defaultValues: getDefaultValues(selectedRecordType) as any,
+    defaultValues: initialData
+      ? convertRecordToFormData(initialData) as any
+      : getDefaultValues(selectedRecordType) as any,
   })
 
   // Watch all field values
@@ -159,10 +222,19 @@ export function CreateHealthRecordForm({
   const unitValue = watch('unit' as any)
   const bodyConditionValue = watch('body_condition' as any)
 
-  // Reset form when record type changes
+  // Reset form when record type changes (only in create mode)
   useEffect(() => {
-    reset(getDefaultValues(selectedRecordType) as any)
-  }, [selectedRecordType, reset])
+    if (!isEditMode) {
+      reset(getDefaultValues(selectedRecordType) as any)
+    }
+  }, [selectedRecordType, reset, isEditMode])
+
+  // Pre-populate form when initialData changes (edit mode)
+  useEffect(() => {
+    if (initialData && isEditMode) {
+      reset(convertRecordToFormData(initialData) as any)
+    }
+  }, [initialData, isEditMode, reset])
 
   const onSubmit = async (data: AllFormData) => {
     if (!user) {
@@ -238,22 +310,38 @@ export function CreateHealthRecordForm({
         }
       }
 
-      // Insert health record
-      const { data: healthRecord, error: insertError } = await supabase
-        .from('health_records')
-        .insert(insertData)
-        .select()
-        .single()
+      // Insert or Update health record
+      let dbError
 
-      if (insertError) {
-        console.error('Supabase insert error:', insertError)
-        throw new Error(insertError.message || `Failed to save ${selectedRecordType} record`)
+      if (isEditMode && initialData) {
+        // Update existing record
+        const updateResult = await supabase
+          .from('health_records')
+          .update(insertData)
+          .eq('id', initialData.id)
+          .select()
+          .single()
+
+        dbError = updateResult.error
+      } else {
+        // Create new record
+        const insertResult = await supabase
+          .from('health_records')
+          .insert(insertData)
+          .single()
+
+        dbError = insertResult.error
+      }
+
+      if (dbError) {
+        console.error('Supabase error:', dbError)
+        throw new Error(dbError.message || `Failed to save ${selectedRecordType} record`)
       }
 
       // Show success toast
       toast({
         title: 'Success',
-        description: `${recordTypeOptions.find(opt => opt.value === selectedRecordType)?.label} record created successfully`,
+        description: `${recordTypeOptions.find(opt => opt.value === selectedRecordType)?.label} record ${isEditMode ? 'updated' : 'created'} successfully`,
       })
 
       // Call success callback
@@ -261,7 +349,7 @@ export function CreateHealthRecordForm({
         onSuccess()
       }
     } catch (err) {
-      console.error(`Error creating ${selectedRecordType} record:`, err)
+      console.error(`Error ${isEditMode ? "updating" : "creating"} ${selectedRecordType} record:`, err)
       if (err instanceof Error) {
         setError(err.message)
         toast({
@@ -282,10 +370,10 @@ export function CreateHealthRecordForm({
     }
   }
 
-  // Get button text based on record type
+  // Get button text based on record type and mode
   const getButtonText = () => {
     const label = recordTypeOptions.find(opt => opt.value === selectedRecordType)?.label || 'Record'
-    return `Save ${label} Record`
+    return isEditMode ? `Update ${label} Record` : `Save ${label} Record`
   }
 
   return (
@@ -301,11 +389,16 @@ export function CreateHealthRecordForm({
       <div className="space-y-2">
         <Label htmlFor="record_type">
           Record Type <span className="text-red-500">*</span>
+          {isEditMode && (
+            <span className="text-xs text-gray-500 font-normal ml-2">
+              (Cannot be changed when editing)
+            </span>
+          )}
         </Label>
         <Select
           value={selectedRecordType}
           onValueChange={(value) => setSelectedRecordType(value as RecordType)}
-          disabled={isLoading}
+          disabled={isLoading || isEditMode}
         >
           <SelectTrigger id="record_type">
             <SelectValue placeholder="Select record type" />
@@ -318,6 +411,11 @@ export function CreateHealthRecordForm({
             ))}
           </SelectContent>
         </Select>
+        {isEditMode && (
+          <p className="text-xs text-gray-500">
+            Record type cannot be changed after creation due to different field structures.
+          </p>
+        )}
       </div>
 
       {/* Conditional Field Rendering */}

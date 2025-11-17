@@ -1,6 +1,6 @@
 import { memo } from 'react'
 import { format } from 'date-fns'
-import { Syringe, Pill, Stethoscope, AlertCircle, Scale, ChevronDown, ChevronUp } from 'lucide-react'
+import { Syringe, Pill, Stethoscope, AlertCircle, Scale, ChevronDown, ChevronUp , Edit, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { HealthRecord, HealthRecordType } from '@/types/healthRecords'
 import {
@@ -15,6 +15,7 @@ interface HealthRecordCardProps {
   record: HealthRecord
   isExpanded?: boolean
   onToggleExpand?: () => void
+  onEdit?: (record: HealthRecord) => void
   isOverdue?: boolean
 }
 
@@ -43,6 +44,7 @@ export const HealthRecordCard = memo(function HealthRecordCard({
   record,
   isExpanded = false,
   onToggleExpand,
+  onEdit,
   isOverdue = false,
 }: HealthRecordCardProps) {
   const Icon = iconMap[record.record_type]
@@ -324,26 +326,31 @@ export const HealthRecordCard = memo(function HealthRecordCard({
                 </div>
               )}
 
-              {/* Placeholder for Edit/Delete buttons */}
+              {/* Edit/Delete buttons */}
               <div className="flex gap-2 pt-2">
+                {onEdit && (
+                  <button
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-white/50 hover:bg-white rounded transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onEdit(record)
+                    }}
+                    aria-label="Edit health record"
+                  >
+                    <Edit className="w-3.5 h-3.5" />
+                    Edit
+                  </button>
+                )}
                 <button
-                  className="px-3 py-1.5 text-xs font-medium bg-white/50 hover:bg-white rounded transition-colors"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    // TODO: Story 3.7 - Edit functionality
-                    console.log('Edit record:', record.id)
-                  }}
-                >
-                  Edit
-                </button>
-                <button
-                  className="px-3 py-1.5 text-xs font-medium bg-white/50 hover:bg-white rounded transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-white/50 hover:bg-white rounded transition-colors"
                   onClick={(e) => {
                     e.stopPropagation()
                     // TODO: Story 3.8 - Delete functionality
                     console.log('Delete record:', record.id)
                   }}
+                  aria-label="Delete health record"
                 >
+                  <Trash2 className="w-3.5 h-3.5" />
                   Delete
                 </button>
               </div>

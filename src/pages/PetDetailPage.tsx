@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { ArrowLeft, Edit, Trash2, Plus } from 'lucide-react'
 
@@ -28,6 +28,7 @@ export function PetDetailPage() {
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [healthRecordDialogOpen, setHealthRecordDialogOpen] = useState(false)
+  const [editingRecord, setEditingRecord] = useState<HealthRecord | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [timelineKey, setTimelineKey] = useState(0)
   const [activeFilters, setActiveFilters] = useState<FilterType[]>(['all'])
@@ -102,13 +103,19 @@ export function PetDetailPage() {
 
   const handleHealthRecordSuccess = () => {
     setHealthRecordDialogOpen(false)
+    setEditingRecord(null)
     // Refresh timeline by changing key
     setTimelineKey((prev) => prev + 1)
   }
 
-  const handleRecordsLoaded = (records: HealthRecord[]) => {
-    setHealthRecords(records)
+  const handleEditHealthRecord = (record: HealthRecord) => {
+    setEditingRecord(record)
+    setHealthRecordDialogOpen(true)
   }
+
+  const handleRecordsLoaded = useCallback((records: HealthRecord[]) => {
+    setHealthRecords(records)
+  }, [])
 
   const handleFilterChange = (newFilters: FilterType[]) => {
     setActiveFilters(newFilters)
@@ -226,14 +233,16 @@ export function PetDetailPage() {
 
           <TabsContent value="health" className="mt-6">
             <div className="space-y-4">
-              {/* Add Health Record Button */}
-              <div className="flex justify-between items-center">
-                <h2 className="text-xl font-semibold text-gray-900">Health Timeline</h2>
-                <Button onClick={handleAddHealthRecord}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Health Record
-                </Button>
-              </div>
+              {/* Add Health Record Button - Only show when records exist */}
+              {healthRecords.length > 0 && (
+                <div className="flex justify-between items-center">
+                  <h2 className="text-xl font-semibold text-gray-900">Health Timeline</h2>
+                  <Button onClick={handleAddHealthRecord}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Health Record
+                  </Button>
+                </div>
+              )}
 
               {/* Timeline Filters */}
               <TimelineFilters
@@ -250,6 +259,7 @@ export function PetDetailPage() {
                 key={timelineKey}
                 petId={pet.id}
                 onAddRecord={handleAddHealthRecord}
+                onEditRecord={handleEditHealthRecord}
                 activeFilters={activeFilters}
                 onRecordsLoaded={handleRecordsLoaded}
               />
@@ -304,16 +314,25 @@ export function PetDetailPage() {
           onSuccess={handleDeleteSuccess}
         />
 
-        {/* Add Health Record Dialog */}
-        <Dialog open={healthRecordDialogOpen} onOpenChange={setHealthRecordDialogOpen}>
+        {/* Add/Edit Health Record Dialog */}
+        <Dialog open={healthRecordDialogOpen} onOpenChange={(open) => {
+          setHealthRecordDialogOpen(open)
+          if (!open) setEditingRecord(null)
+        }}>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Add Health Record for {pet.name}</DialogTitle>
+              <DialogTitle>
+                {editingRecord ? 'Edit' : 'Add'} Health Record for {pet.name}
+              </DialogTitle>
             </DialogHeader>
             <CreateHealthRecordForm
               petId={pet.id}
+              initialData={editingRecord}
               onSuccess={handleHealthRecordSuccess}
-              onCancel={() => setHealthRecordDialogOpen(false)}
+              onCancel={() => {
+                setHealthRecordDialogOpen(false)
+                setEditingRecord(null)
+              }}
             />
           </DialogContent>
         </Dialog>
