@@ -61,8 +61,8 @@ development_status:
   3-4-view-health-timeline-with-color-coding: done
   3-5-filter-timeline-by-record-type: done
   3-6-weight-tracking-visualization-chart: done
-  3-7-edit-health-record: review
-  3-8-delete-health-record-with-confirmation: ready-for-dev
+  3-7-edit-health-record: done
+  3-8-delete-health-record-with-confirmation: review
   3-9-attach-documents-to-health-records: ready-for-dev
   3-10-free-tier-enforcement-50-health-records-limit: ready-for-dev
   epic-3-retrospective: optional

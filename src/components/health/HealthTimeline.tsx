@@ -1,9 +1,11 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useCallback, useRef } from 'react'
 import { Plus } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { HealthRecordCard } from './HealthRecordCard'
+import { DeleteHealthRecordDialog } from './DeleteHealthRecordDialog'
+import { useToast } from '@/hooks/use-toast'
 import type { HealthRecord, HealthRecordType } from '@/types/healthRecords'
 
 export type FilterType = 'all' | HealthRecordType
@@ -16,11 +18,25 @@ interface HealthTimelineProps {
   onRecordsLoaded?: (records: HealthRecord[]) => void
 }
 
+const formatRecordType = (recordType: string): string => {
+  return recordType.replace('_', ' ')
+}
+
 export function HealthTimeline({ petId, onAddRecord, onEditRecord, activeFilters = ['all'], onRecordsLoaded }: HealthTimelineProps) {
   const [records, setRecords] = useState<HealthRecord[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [expandedRecordId, setExpandedRecordId] = useState<string | null>(null)
+
+  // Delete confirmation state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [recordToDelete, setRecordToDelete] = useState<HealthRecord | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  // Ref to store records for rollback
+  const recordsBeforeDelete = useRef<HealthRecord[]>([])
+
+  const { toast } = useToast()
 
   useEffect(() => {
     const fetchHealthRecords = async () => {
@@ -76,6 +92,74 @@ export function HealthTimeline({ petId, onAddRecord, onEditRecord, activeFilters
   const handleToggleExpand = (recordId: string) => {
     setExpandedRecordId((prev) => (prev === recordId ? null : recordId))
   }
+
+  const handleDeleteClick = useCallback((record: HealthRecord) => {
+    setRecordToDelete(record)
+    setDeleteDialogOpen(true)
+  }, [])
+
+  const handleConfirmDelete = useCallback(async () => {
+    if (!recordToDelete) return
+
+    const recordId = recordToDelete.id
+    const recordType = formatRecordType(recordToDelete.record_type)
+
+    recordsBeforeDelete.current = [...records]
+    setRecords(prev => prev.filter(r => r.id !== recordId))
+    setIsDeleting(true)
+
+    try {
+      const { error: deleteError } = await supabase
+        .from('health_records')
+        .delete()
+        .eq('id', recordId)
+
+      if (deleteError) {
+        console.error('Error deleting health record:', deleteError)
+        setRecords(recordsBeforeDelete.current)
+        toast({
+          title: 'Delete failed',
+          description: deleteError.message === 'new row violates row-level security policy'
+            ? 'You do not have permission to delete this record.'
+            : 'Failed to delete health record. Please try again.',
+          variant: 'destructive',
+        })
+        return
+      }
+
+      setDeleteDialogOpen(false)
+      setRecordToDelete(null)
+      setExpandedRecordId(null)
+
+      toast({
+        title: 'Record deleted',
+        description: recordType.charAt(0).toUpperCase() + recordType.slice(1) + ' deleted successfully',
+      })
+
+      if (onRecordsLoaded) {
+        onRecordsLoaded(records.filter(r => r.id !== recordId))
+      }
+    } catch (err) {
+      console.error('Unexpected error deleting health record:', err)
+      setRecords(recordsBeforeDelete.current)
+      toast({
+        title: 'Delete failed',
+        description: 'An unexpected error occurred. Please check your connection and try again.',
+        variant: 'destructive',
+      })
+    } finally {
+      setIsDeleting(false)
+    }
+  }, [recordToDelete, records, toast, onRecordsLoaded])
+
+  const handleDialogClose = useCallback((open: boolean) => {
+    if (!isDeleting) {
+      setDeleteDialogOpen(open)
+      if (!open) {
+        setRecordToDelete(null)
+      }
+    }
+  }, [isDeleting])
 
   // Filter records based on activeFilters (AC #3)
   const filteredRecords = useMemo(() => {
@@ -144,17 +228,28 @@ export function HealthTimeline({ petId, onAddRecord, onEditRecord, activeFilters
 
   // Timeline with records
   return (
-    <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
-      {filteredRecords.map((record) => (
-        <HealthRecordCard
-          key={record.id}
-          record={record}
-          isExpanded={expandedRecordId === record.id}
-          onToggleExpand={() => handleToggleExpand(record.id)}
-          onEdit={onEditRecord}
-          isOverdue={isVaccineOverdue(record)}
-        />
-      ))}
-    </div>
+    <>
+      <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
+        {filteredRecords.map((record) => (
+          <HealthRecordCard
+            key={record.id}
+            record={record}
+            isExpanded={expandedRecordId === record.id}
+            onToggleExpand={() => handleToggleExpand(record.id)}
+            onEdit={onEditRecord}
+            onDelete={handleDeleteClick}
+            isOverdue={isVaccineOverdue(record)}
+          />
+        ))}
+      </div>
+
+      <DeleteHealthRecordDialog
+        record={recordToDelete}
+        open={deleteDialogOpen}
+        onOpenChange={handleDialogClose}
+        onConfirm={handleConfirmDelete}
+        isDeleting={isDeleting}
+      />
+    </>
   )
 }

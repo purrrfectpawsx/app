@@ -86,7 +86,16 @@ export const vetVisitRecordSchema = z.object({
   vet_name: textSchemas.optionalShort,
   diagnosis: textSchemas.optionalLong,
   treatment: textSchemas.optionalLong,
-  cost: z.number().positive('Cost must be positive').optional().nullable(),
+  cost: z.preprocess(
+    (val) => {
+      // Handle empty strings and NaN from form input
+      if (val === '' || val === null || val === undefined || (typeof val === 'number' && isNaN(val))) {
+        return null
+      }
+      return val
+    },
+    z.number().positive('Cost must be positive').optional().nullable()
+  ),
   notes: textSchemas.notes,
 })
 

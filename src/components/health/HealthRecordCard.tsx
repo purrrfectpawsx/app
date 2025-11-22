@@ -16,6 +16,7 @@ interface HealthRecordCardProps {
   isExpanded?: boolean
   onToggleExpand?: () => void
   onEdit?: (record: HealthRecord) => void
+  onDelete?: (record: HealthRecord) => void
   isOverdue?: boolean
 }
 
@@ -45,6 +46,7 @@ export const HealthRecordCard = memo(function HealthRecordCard({
   isExpanded = false,
   onToggleExpand,
   onEdit,
+  onDelete,
   isOverdue = false,
 }: HealthRecordCardProps) {
   const Icon = iconMap[record.record_type]
@@ -341,18 +343,19 @@ export const HealthRecordCard = memo(function HealthRecordCard({
                     Edit
                   </button>
                 )}
-                <button
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-white/50 hover:bg-white rounded transition-colors"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    // TODO: Story 3.8 - Delete functionality
-                    console.log('Delete record:', record.id)
-                  }}
-                  aria-label="Delete health record"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                  Delete
-                </button>
+                {onDelete && (
+                  <button
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-600 bg-white/50 hover:bg-red-50 rounded transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onDelete(record)
+                    }}
+                    aria-label="Delete health record"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    Delete
+                  </button>
+                )}
               </div>
             </div>
           )}
